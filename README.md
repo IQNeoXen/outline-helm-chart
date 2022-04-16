@@ -9,8 +9,9 @@ Please refer to Helm's [documentation](https://helm.sh/docs/) to get started.
 
 Once Helm is set up properly, add the repo as follows:
 
-```console
+```bash
 helm repo add community-charts https://community-charts.github.io/helm-charts
+helm repo update
 ```
 
 You can then run `helm search repo community-charts` to see the charts.
