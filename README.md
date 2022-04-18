@@ -1,6 +1,6 @@
 # Community Kubernetes Helm Charts
 
-![MIT License](https://img.shields.io/github/license/community-charts/helm-charts) ![Release Charts](https://github.com/community-charts/helm-charts/workflows/Release%20Charts/badge.svg?branch=main) [![Releases downloads](https://img.shields.io/github/downloads/community-charts/helm-charts/total.svg)](https://github.com/community-charts/helm-charts/releases) [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/mlflow)](https://artifacthub.io/packages/search?repo=mlflow)
+![MIT License](https://img.shields.io/github/license/community-charts/helm-charts) ![Release Charts](https://github.com/community-charts/helm-charts/workflows/Release%20Charts/badge.svg?branch=main) [![Releases downloads](https://img.shields.io/github/downloads/community-charts/helm-charts/total.svg)](https://github.com/community-charts/helm-charts/releases) [![Artifact Hub](https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/community-charts)](https://artifacthub.io/packages/search?repo=community-charts)
 
 ## Usage
 
