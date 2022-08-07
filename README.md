@@ -20,6 +20,13 @@ You can then run `helm search repo community-charts` to see the charts.
 
 [Helm](https://helm.sh) charts can be found on Github: <https://github.com/community-charts/helm-charts/>
 
+## Contributors
+
+Community Charts are made with <3 thanks to these wonderful people:
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
 ## License
 
 <!-- Keep full URL links to repo files because this README syncs from main to gh-pages.  -->
