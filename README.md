@@ -25,7 +25,9 @@ You can then run `helm search repo community-charts` to see the charts.
 
 ## Contributors
 
-Community Charts are made with <3 thanks to these wonderful people:
+Community Charts are made with <3 thanks to these wonderful people
+([emoji key](https://allcontributors.org/docs/en/emoji-key#table)):
+
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
