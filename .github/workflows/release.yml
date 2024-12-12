@@ -5,11 +5,13 @@ on:
     branches: [ main ]
     paths:
       - 'charts/**'
+      - '.github/workflows/release.yml'
 
   pull_request:
     branches: [ main ]
     paths:
       - 'charts/**'
+      - '.github/workflows/release.yml'
 
 jobs:
   lint-test:
