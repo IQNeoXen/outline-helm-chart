@@ -54,6 +54,8 @@ jobs:
           curl -s https://api.github.com/repos/artifacthub/hub/releases/latest | grep -E 'browser_download_url' | grep linux_amd64 | grep -Eo 'https://[^\"]*' | xargs wget -O - | tar -xz
           ./ah lint -p charts/mlflow || exit 1
           ./ah lint -p charts/drone || exit 1
+          ./ah lint -p charts/actualbudget || exit 1
+          ./ah lint -p charts/cloudflared || exit 1
           rm -f ./ah
 
       - name: install helm unittest plugin
@@ -96,19 +98,26 @@ jobs:
         with:
           version: v3.16.3
 
-      - name: Prepare GPG key
+      - name: Prepare GPG environment for Helm
+        id: import-gpg
         run: |
-          gpg_dir=.cr-gpg
-          mkdir "$gpg_dir"
-          keyring="$gpg_dir/secring.gpg"
-          base64 -d <<< "$GPG_KEYRING_BASE64" > "$keyring"
-          passphrase_file="$gpg_dir/passphrase"
-          echo "$GPG_PASSPHRASE" > "$passphrase_file"
-          echo "CR_PASSPHRASE_FILE=$passphrase_file" >> "$GITHUB_ENV"
-          echo "CR_KEYRING=$keyring" >> "$GITHUB_ENV"
-        env:
-          GPG_KEYRING_BASE64: "${{ secrets.GPG_KEYRING_BASE64 }}"
-          GPG_PASSPHRASE: "${{ secrets.GPG_PASSPHRASE }}"
+          GNUPG_DIR="$(mktemp --directory --tmpdir=${{ runner.temp }})"
+
+          # Import GPG passphrase
+          echo '${{ secrets.GPG_PASSPHRASE }}' > "${GNUPG_DIR}/passphrase"
+          echo "passphrase-file=${GNUPG_DIR}/passphrase" >> $GITHUB_OUTPUT
+
+          # Import GPG signing key
+          echo '${{ secrets.GPG_KEYRING_BASE64 }}' | base64 -d | gpg --dearmor > "${GNUPG_DIR}/secring.gpg"
+          echo "keyring=${GNUPG_DIR}/secring.gpg" >> $GITHUB_OUTPUT
+
+          # Export signing key name
+          (
+            echo -n "name="
+            gpg --with-colons --import-options show-only --import "${GNUPG_DIR}/secring.gpg" \
+            | grep uid \
+            | cut -d':' -f10
+          ) >> $GITHUB_OUTPUT
 
       - name: Add dependency chart repos
         run: |
@@ -119,6 +128,8 @@ jobs:
         uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          CR_KEY: "${{ secrets.CR_KEY }}"
+          CR_KEY: ${{ steps.import-gpg.outputs.name }}
+          CR_KEYRING: ${{ steps.import-gpg.outputs.keyring }}
+          CR_PASSPHRASE_FILE: ${{ steps.import-gpg.outputs.passphrase-file }}
           CR_SIGN: "true"
           CR_SKIP_EXISTING: "true"
