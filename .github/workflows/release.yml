@@ -105,11 +105,11 @@ jobs:
 
           # Import GPG passphrase
           echo '${{ secrets.GPG_PASSPHRASE }}' > "${GNUPG_DIR}/passphrase"
-          echo "passphrase-file=${GNUPG_DIR}/passphrase" >> $GITHUB_OUTPUT
+          echo "passphrase-file=${GNUPG_DIR}/passphrase" >> "${GITHUB_OUTPUT}"
 
           # Import GPG signing key
           echo '${{ secrets.GPG_KEYRING_BASE64 }}' | base64 -d | gpg --dearmor > "${GNUPG_DIR}/secring.gpg"
-          echo "keyring=${GNUPG_DIR}/secring.gpg" >> $GITHUB_OUTPUT
+          echo "keyring=${GNUPG_DIR}/secring.gpg" >> "${GITHUB_OUTPUT}"
 
           # Export signing key name
           (
@@ -117,7 +117,7 @@ jobs:
             gpg --with-colons --import-options show-only --import "${GNUPG_DIR}/secring.gpg" \
             | grep uid \
             | cut -d':' -f10
-          ) >> $GITHUB_OUTPUT
+          ) >> "${GITHUB_OUTPUT}"
 
       - name: Add dependency chart repos
         run: |
