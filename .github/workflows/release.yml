@@ -113,14 +113,6 @@ jobs:
           echo '${{ secrets.GPG_KEYRING_BASE64 }}' | base64 -d | gpg --dearmor > "${GNUPG_DIR}/secring.gpg"
           echo "keyring=${GNUPG_DIR}/secring.gpg" >> "${GITHUB_OUTPUT}"
 
-          # Export signing key name
-          (
-            echo -n "name="
-            gpg --with-colons --import-options show-only --import "${GNUPG_DIR}/secring.gpg" \
-            | grep uid \
-            | cut -d':' -f10
-          ) >> "${GITHUB_OUTPUT}"
-
       - name: Add dependency chart repos
         run: |
           helm repo add jetstack https://charts.jetstack.io
@@ -130,7 +122,7 @@ jobs:
         uses: helm/chart-releaser-action@v1.6.0
         env:
           CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          CR_KEY: ${{ steps.import-gpg.outputs.name }}
+          CR_KEY: "${{ secrets.CR_KEY }}"
           CR_KEYRING: ${{ steps.import-gpg.outputs.keyring }}
           CR_PASSPHRASE_FILE: ${{ steps.import-gpg.outputs.passphrase-file }}
           CR_SIGN: "true"
