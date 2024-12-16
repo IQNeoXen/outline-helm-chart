@@ -53,11 +53,21 @@ jobs:
 
       - name: Run Artifact Hub lint
         run: |
-          curl -s https://api.github.com/repos/artifacthub/hub/releases/latest | grep -E 'browser_download_url' | grep linux_amd64 | grep -Eo 'https://[^\"]*' | xargs wget -O - | tar -xz
-          ./ah lint -p charts/mlflow || exit 1
-          ./ah lint -p charts/drone || exit 1
-          ./ah lint -p charts/actualbudget || exit 1
-          ./ah lint -p charts/cloudflared || exit 1
+          curl -s https://api.github.com/repos/artifacthub/hub/releases/latest \
+            | grep -E 'browser_download_url' \
+            | grep linux_amd64 \
+            | grep -Eo 'https://[^\"]*' \
+            | xargs wget -q -O - \
+            | tar -xz
+
+          for CHART in charts/*; do
+            if [ -d "$CHART" ]; then
+              echo "Linting $CHART"
+              ./ah lint -p "$CHART" || exit 1
+            fi
+          done
+          echo "All charts linted successfully."
+
           rm -f ./ah
 
       - name: install helm unittest plugin
