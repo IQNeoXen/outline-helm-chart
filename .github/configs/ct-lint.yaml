@@ -15,4 +15,4 @@ validate-yaml: true
 exclude-deprecated: true
 excluded-charts: []
 additional-commands:
-  - helm unittest --helm3 --strict --file unittests/*.yaml --file 'unittests/**/*.yaml' {{ .Path }}
+  - helm unittest --strict --file 'unittests/**/*.yaml' {{ .Path }}
