@@ -1,0 +1,15 @@
+suite: test configmap
+
+templates:
+  - configmap.yaml
+
+tests:
+  - it: should match snapshot of default values
+    release:
+      name: outline
+      namespace: outline
+    chart:
+      version: 1.0.0
+      appVersion: 1.0.0
+    asserts:
+      - matchSnapshot: { }

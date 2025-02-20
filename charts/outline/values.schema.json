@@ -1,0 +1,2743 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "properties": {
+    "global": {
+      "description": "Global values are values that can be accessed from any chart or subchart by exactly the same name.",
+      "required": [],
+      "title": "global",
+      "type": "object"
+    },
+    "replicaCount": {
+      "default": 1,
+      "minimum": 0,
+      "description": "This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/",
+      "required": [],
+      "title": "replicaCount",
+      "type": "integer"
+    },
+    "image": {
+      "additionalProperties": false,
+      "description": "This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/",
+      "properties": {
+        "pullPolicy": {
+          "default": "IfNotPresent",
+          "description": "This sets the pull policy for images.",
+          "required": [],
+          "title": "pullPolicy",
+          "enum": ["Always", "IfNotPresent", "Never"],
+          "type": "string"
+        },
+        "repository": {
+          "default": "outlinewiki/outline",
+          "description": "Container image repository",
+          "required": [],
+          "title": "repository",
+          "type": "string"
+        },
+        "tag": {
+          "default": "",
+          "description": "Overrides the image tag whose default is the chart appVersion.",
+          "required": [],
+          "title": "tag",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repository",
+        "pullPolicy",
+        "tag"
+      ],
+      "title": "image",
+      "type": "object"
+    },
+    "imagePullSecrets": {
+      "description": "This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": ["name"]
+      },
+      "required": [],
+      "title": "imagePullSecrets",
+      "type": "array"
+    },
+    "nameOverride": {
+      "default": "",
+      "description": "This is to override the chart name.",
+      "required": [],
+      "title": "nameOverride",
+      "type": "string"
+    },
+    "fullnameOverride": {
+      "default": "",
+      "description": "This is to override the full name of the chart.",
+      "required": [],
+      "title": "fullnameOverride",
+      "type": "string"
+    },
+    "strategy": {
+      "additionalProperties": true,
+      "description": "This will set the deployment strategy more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy",
+      "properties": {
+        "type": {
+          "default": "RollingUpdate",
+          "required": [],
+          "title": "type",
+          "type": "string",
+          "enum": ["RollingUpdate", "Recreate"]
+        }
+      },
+      "required": ["type"],
+      "title": "strategy",
+      "type": "object"
+    },
+    "serviceAccount": {
+      "additionalProperties": false,
+      "description": "This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/",
+      "properties": {
+        "annotations": {
+          "description": "Annotations to add to the service account. AWS EKS users can assign role arn from here.\nPlease find more information from here:\nhttps://docs.aws.amazon.com/eks/latest/userguide/associate-service-account-role.html",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "automount": {
+          "default": true,
+          "description": "Automatically mount a ServiceAccount's API credentials?",
+          "required": [],
+          "title": "automount",
+          "type": "boolean"
+        },
+        "create": {
+          "default": true,
+          "description": "Specifies whether a service account should be created",
+          "required": [],
+          "title": "create",
+          "type": "boolean"
+        },
+        "name": {
+          "default": "",
+          "description": "The name of the service account to use.\nIf not set and create is true, a name is generated using the fullname template",
+          "required": [],
+          "title": "name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "create",
+        "automount",
+        "annotations",
+        "name"
+      ],
+      "title": "serviceAccount",
+      "type": "object"
+    },
+    "podAnnotations": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "default": {},
+      "description": "This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
+      "required": [],
+      "title": "podAnnotations",
+      "type": "object"
+    },
+    "podLabels": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "default": {},
+      "description": "This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/",
+      "required": [],
+      "title": "podLabels",
+      "type": "object"
+    },
+    "podSecurityContext": {
+      "additionalProperties": true,
+      "default": {},
+      "description": "This is for setting Security Context to a Pod. For more information checkout: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
+      "required": [],
+      "title": "podSecurityContext",
+      "type": "object"
+    },
+    "securityContext": {
+      "additionalProperties": true,
+      "default": {},
+      "description": "This is for setting Security Context to a Container. For more information checkout: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/",
+      "required": [],
+      "title": "securityContext",
+      "type": "object"
+    },
+    "service": {
+      "additionalProperties": false,
+      "description": "This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/",
+      "properties": {
+        "annotations": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "description": "Additional service annotations",
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "name": {
+          "default": "http",
+          "description": "Default Service name",
+          "required": [],
+          "title": "name",
+          "type": "string"
+        },
+        "port": {
+          "default": 3000,
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports",
+          "required": [],
+          "title": "port",
+          "type": "integer"
+        },
+        "type": {
+          "default": "ClusterIP",
+          "description": "This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types",
+          "required": [],
+          "title": "type",
+          "type": "string",
+          "enum": ["ClusterIP", "NodePort", "LoadBalancer"]
+        }
+      },
+      "required": [
+        "type",
+        "port",
+        "name",
+        "annotations"
+      ],
+      "title": "service",
+      "type": "object"
+    },
+    "secretKey": {
+      "default": "",
+      "description": "This is for setting up the secret key. It will be auto generated if not set.",
+      "required": [],
+      "title": "secretKey",
+      "type": "string"
+    },
+    "utilsSecret": {
+      "default": "",
+      "description": "This is for setting up the utils secret. It will be auto generated if not set.",
+      "required": [],
+      "title": "utilsSecret",
+      "type": "string"
+    },
+    "defaultLanguage": {
+      "default": "en_US",
+      "enum": ["en_US", "en_GB", "de_DE", "fr_FR", "es_ES", "it_IT", "ja_JP", "ko_KR", "pt_BR", "ru_RU", "tr_TR", "zh_CN", "zh_TW"],
+      "description": "This is for setting up the default language. See translate.getoutline.com for a list of available language codes and their rough percentage translated",
+      "required": [],
+      "title": "defaultLanguage",
+      "type": "string"
+    },
+    "rateLimiter": {
+      "additionalProperties": false,
+      "description": "This is for setting up the rate limiter.",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "This is for setting up the rate limiter enabled.",
+          "required": [],
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "limit": {
+          "default": 100,
+          "description": "This is for setting up the rate limiter limit.",
+          "required": [],
+          "title": "limit",
+          "type": "integer"
+        },
+        "window": {
+          "default": 60,
+          "description": "This is for setting up the rate limiter window.",
+          "required": [],
+          "title": "window",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "enabled",
+        "limit",
+        "window"
+      ],
+      "title": "rateLimiter",
+      "type": "object"
+    },
+    "autoUpdate": {
+      "additionalProperties": false,
+      "description": "This is for setting up the auto update.",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "This is for setting up the auto update enabled.",
+          "required": [],
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "telemetry": {
+          "default": false,
+          "description": "This is for setting up the enable telemetry.",
+          "required": [],
+          "title": "telemetry",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled",
+        "telemetry"
+      ],
+      "title": "autoUpdate",
+      "type": "object"
+    },
+    "web": {
+      "additionalProperties": false,
+      "description": "This is for setting up the web.",
+      "properties": {
+        "concurrency": {
+          "default": 1,
+          "minimum": 1,
+          "maximum": 10,
+          "description": "This is for setting up the web concurrency.",
+          "required": [],
+          "title": "concurrency",
+          "type": "integer"
+        },
+        "forceHttps": {
+          "default": true,
+          "description": "This is for setting up the web force https.",
+          "required": [],
+          "title": "forceHttps",
+          "type": "boolean"
+        },
+        "skipSSLVerification": {
+          "default": false,
+          "description": "This is for setting up the skip ssl verification to allow insecure connections.",
+          "required": [],
+          "title": "skipSSLVerification",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "concurrency",
+        "forceHttps",
+        "skipSSLVerification"
+      ],
+      "title": "web",
+      "type": "object"
+    },
+    "logging": {
+      "additionalProperties": false,
+      "description": "This is for setting up the logging.",
+      "properties": {
+        "extraDebug": {
+          "description": "This is for setting up the extra debug. Available modules: lifecycle, http, editor, router, collaboration, misc, store, plugins, policies",
+          "items": {
+            "type": "string",
+            "enum": ["lifecycle", "http", "editor", "router", "collaboration", "misc", "store", "plugins", "policies"]
+          },
+          "default": [],
+          "required": [],
+          "title": "extraDebug",
+          "type": "array"
+        },
+        "level": {
+          "default": "info",
+          "enum": ["error", "warn", "info", "http", "verbose", "debug", "silly"],
+          "description": "This is for setting up the logging level.",
+          "required": [],
+          "title": "level",
+          "type": "string"
+        }
+      },
+      "required": [
+        "level",
+        "extraDebug"
+      ],
+      "title": "logging",
+      "type": "object"
+    },
+    "fileStorage": {
+      "additionalProperties": false,
+      "description": "This is for setting up the file storage. More information about file storage can be found here: https://docs.getoutline.com/s/hosting/doc/file-storage-N4M0T6Ypu7",
+      "properties": {
+        "mode": {
+          "default": "local",
+          "description": "This is for setting up the file storage mode. Possible values are: local or s3",
+          "required": [],
+          "title": "mode",
+          "type": "string"
+        },
+        "uploadMaxSize": {
+          "default": "262144000",
+          "description": "This is for setting up the file storage upload max size.",
+          "required": [],
+          "title": "uploadMaxSize",
+          "type": "string"
+        },
+        "importMaxSize": {
+          "default": "",
+          "description": "This is for setting up the file storage import max size.",
+          "required": [],
+          "title": "importMaxSize",
+          "type": "string"
+        },
+        "workspaceImportMaxSize": {
+          "default": "",
+          "description": "This is for setting up the file storage workspace import max size.",
+          "required": [],
+          "title": "workspaceImportMaxSize",
+          "type": "string"
+        },
+        "local": {
+          "additionalProperties": false,
+          "description": "This is for setting up the local file storage.",
+          "properties": {
+            "rootDir": {
+              "default": "/var/lib/outline/data",
+              "description": "This is for setting up the local file storage root directory.",
+              "required": [],
+              "title": "rootDir",
+              "type": "string"
+            },
+            "persistence": {
+              "additionalProperties": false,
+              "description": "This is for setting up the local file storage persistence.",
+              "properties": {
+                "enabled": {
+                  "default": false,
+                  "description": "This is for setting up the local file storage persistence enabled.",
+                  "required": [],
+                  "title": "enabled",
+                  "type": "boolean"
+                },
+                "accessModes": {
+                  "description": "This is for setting up the local file storage persistence access modes.",
+                  "items": {
+                    "type": "string",
+                    "enum": ["ReadWriteOnce", "ReadOnlyMany", "ReadWriteMany"]
+                  },
+                  "default": ["ReadWriteOnce"],
+                  "required": [],
+                  "title": "accessModes",
+                  "type": "array"
+                },
+                "annotations": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "default": {},
+                  "description": "This is for setting up the local file storage persistence annotations.",
+                  "required": [],
+                  "title": "annotations",
+                  "type": "object"
+                },
+                "existingClaim": {
+                  "default": "",
+                  "description": "This is for setting up the local file storage persistence existing claim.",
+                  "required": [],
+                  "title": "existingClaim",
+                  "type": "string"
+                },
+                "size": {
+                  "default": "8Gi",
+                  "pattern": "^[0-9]+(Gi|Mi|Ki|G|M|K)$",
+                  "description": "This is for setting up the local file storage persistence size.",
+                  "required": [],
+                  "title": "size",
+                  "type": "string"
+                },
+                "storageClass": {
+                  "default": "",
+                  "description": "This is for setting up the local file storage persistence storage class.",
+                  "required": [],
+                  "title": "storageClass",
+                  "type": "string"
+                },
+                "volumeMode": {
+                  "default": "",
+                  "enum": ["", "Filesystem", "Block"],
+                  "description": "This is for setting up the local file storage persistence volume mode.",
+                  "required": [],
+                  "title": "volumeMode",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "enabled",
+                "accessModes",
+                "annotations",
+                "existingClaim",
+                "size",
+                "storageClass",
+                "volumeMode"
+              ],
+              "title": "persistence",
+              "type": "object"
+            }
+          },
+          "required": [
+            "rootDir",
+            "persistence"
+          ],
+          "title": "local",
+          "type": "object"
+        },
+        "s3": {
+          "additionalProperties": false,
+          "description": "This is for setting up the s3 file storage.",
+          "properties": {
+            "accelerateUrl": {
+              "default": "",
+              "description": "This is for setting up the s3 file storage accelerate url.",
+              "required": [],
+              "title": "accelerateUrl",
+              "type": "string"
+            },
+            "accessKeyId": {
+              "default": "",
+              "description": "This is for setting up the s3 file storage access key id.",
+              "required": [],
+              "title": "accessKeyId",
+              "type": "string"
+            },
+            "acl": {
+              "default": "private",
+              "enum": ["private", "public-read", "public-read-write", "aws-exec-read", "authenticated-read", "bucket-owner-read", "bucket-owner-full-control", "log-delivery-write"],
+              "description": "This is for setting up the s3 file storage acl.",
+              "required": [],
+              "title": "acl",
+              "type": "string"
+            },
+            "bucket": {
+              "default": "outline",
+              "description": "This is for setting up the s3 file storage bucket.",
+              "required": [],
+              "title": "bucket",
+              "type": "string"
+            },
+            "bucketUrl": {
+              "default": "",
+              "description": "This is for setting up the s3 file storage bucket url.",
+              "required": [],
+              "title": "bucketUrl",
+              "type": "string"
+            },
+            "existingSecret": {
+              "default": "",
+              "description": "This is for setting up the s3 file storage existing secret. Must contain access-key-id and secret-access-key keys.",
+              "required": [],
+              "title": "existingSecret",
+              "type": "string"
+            },
+            "forcePathStyle": {
+              "default": true,
+              "description": "This is for setting up the s3 file storage force path style.",
+              "required": [],
+              "title": "forcePathStyle",
+              "type": "boolean"
+            },
+            "region": {
+              "default": "us-east-1",
+              "pattern": "^[a-z]{2}-[a-z]+-\\d+$",
+              "description": "This is for setting up the s3 file storage region.",
+              "required": [],
+              "title": "region",
+              "type": "string"
+            },
+            "secretAccessKey": {
+              "default": "",
+              "description": "This is for setting up the s3 file storage secret access key.",
+              "required": [],
+              "title": "secretAccessKey",
+              "type": "string"
+            }
+          },
+          "required": [
+            "existingSecret",
+            "bucket",
+            "accessKeyId",
+            "secretAccessKey",
+            "region",
+            "accelerateUrl",
+            "bucketUrl",
+            "forcePathStyle",
+            "acl"
+          ],
+          "title": "s3",
+          "type": "object"
+        }
+      },
+      "required": [
+        "mode",
+        "uploadMaxSize",
+        "importMaxSize",
+        "workspaceImportMaxSize",
+        "local",
+        "s3"
+      ],
+      "title": "fileStorage",
+      "type": "object"
+    },
+    "auth": {
+      "additionalProperties": false,
+      "description": "This is for setting up the auth.",
+      "properties": {
+        "auth0": {
+          "additionalProperties": false,
+          "description": "This is for setting up the auth0. More information about auth0 can be found here: https://auth0.com/docs/get-started/applications/configure-applications-with-oidc-discovery",
+          "properties": {
+            "baseUrl": {
+              "default": "",
+              "description": "This is for setting up the auth0 base url.",
+              "required": [],
+              "title": "baseUrl",
+              "type": "string"
+            },
+            "clientId": {
+              "default": "",
+              "description": "This is for setting up the auth0 client id.",
+              "required": [],
+              "title": "clientId",
+              "type": "string"
+            },
+            "clientSecret": {
+              "default": "",
+              "description": "This is for setting up the auth0 client secret.",
+              "required": [],
+              "title": "clientSecret",
+              "type": "string"
+            },
+            "displayName": {
+              "default": "Auth0 Connect",
+              "description": "This is for setting up the auth0 display name.",
+              "required": [],
+              "title": "displayName",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the auth0 enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "scopes": {
+              "description": "This is for setting up the auth0 scopes.",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "required": [],
+              "title": "scopes",
+              "type": "array"
+            },
+            "usernameClaim": {
+              "default": "name",
+              "description": "This is for setting up the auth0 username claim.",
+              "required": [],
+              "title": "usernameClaim",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "baseUrl",
+            "usernameClaim",
+            "displayName",
+            "scopes"
+          ],
+          "title": "auth0",
+          "type": "object"
+        },
+        "azure": {
+          "additionalProperties": false,
+          "description": "This is for setting up the azure. More information about azure can be found here: https://docs.getoutline.com/s/hosting/doc/microsoft-entra-UVz6jsIOcv",
+          "properties": {
+            "clientId": {
+              "default": "",
+              "description": "This is for setting up the azure client id.",
+              "required": [],
+              "title": "clientId",
+              "type": "string"
+            },
+            "clientSecret": {
+              "default": "",
+              "description": "This is for setting up the azure client secret.",
+              "required": [],
+              "title": "clientSecret",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the azure enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "resourceAppId": {
+              "default": "",
+              "description": "This is for setting up the azure resource app id. This is optional.",
+              "required": [],
+              "title": "resourceAppId",
+              "type": "string"
+            },
+            "tenantId": {
+              "default": "",
+              "description": "This is for setting up the azure tenant id. This is optional.",
+              "required": [],
+              "title": "tenantId",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "resourceAppId",
+            "tenantId"
+          ],
+          "title": "azure",
+          "type": "object"
+        },
+        "discord": {
+          "additionalProperties": false,
+          "description": "This is for setting up the discord. More information about discord can be found here: https://docs.getoutline.com/s/hosting/doc/discord-g4JdWFFub6",
+          "properties": {
+            "clientId": {
+              "default": "",
+              "description": "This is for setting up the discord client id.",
+              "required": [],
+              "title": "clientId",
+              "type": "string"
+            },
+            "clientSecret": {
+              "default": "",
+              "description": "This is for setting up the discord client secret.",
+              "required": [],
+              "title": "clientSecret",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the discord enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "serverId": {
+              "default": "",
+              "description": "This is for setting up the discord server id.",
+              "required": [],
+              "title": "serverId",
+              "type": "string"
+            },
+            "serverRoles": {
+              "description": "This is for setting up the discord server roles.",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 0,
+              "required": [],
+              "title": "serverRoles",
+              "type": "array"
+            }
+          },
+          "required": [
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "serverId",
+            "serverRoles"
+          ],
+          "title": "discord",
+          "type": "object"
+        },
+        "gitea": {
+          "additionalProperties": false,
+          "description": "This is for setting up the gitea. More information about gitea can be found here: https://docs.gitea.com/development/oauth2-provider#endpoints",
+          "properties": {
+            "baseUrl": {
+              "default": "",
+              "description": "This is for setting up the gitea base url.",
+              "required": [],
+              "title": "baseUrl",
+              "type": "string"
+            },
+            "clientId": {
+              "default": "",
+              "description": "This is for setting up the gitea client id.",
+              "required": [],
+              "title": "clientId",
+              "type": "string"
+            },
+            "clientSecret": {
+              "default": "",
+              "description": "This is for setting up the gitea client secret.",
+              "required": [],
+              "title": "clientSecret",
+              "type": "string"
+            },
+            "displayName": {
+              "default": "Gitea Connect",
+              "description": "This is for setting up the gitea display name.",
+              "required": [],
+              "title": "displayName",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the gitea enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "scopes": {
+              "description": "This is for setting up the gitea scopes.",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "required": [],
+              "title": "scopes",
+              "type": "array"
+            },
+            "usernameClaim": {
+              "default": "preferred_username",
+              "description": "This is for setting up the gitea username claim.",
+              "required": [],
+              "title": "usernameClaim",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "baseUrl",
+            "usernameClaim",
+            "displayName",
+            "scopes"
+          ],
+          "title": "gitea",
+          "type": "object"
+        },
+        "github": {
+          "additionalProperties": false,
+          "description": "This is for setting up the github. More information about github can be found here: https://docs.getoutline.com/s/hosting/doc/github-GchT3NNxI9",
+          "properties": {
+            "appId": {
+              "default": "",
+              "description": "This is for setting up the github app id.",
+              "required": [],
+              "title": "appId",
+              "type": "string"
+            },
+            "appName": {
+              "default": "",
+              "description": "This is for setting up the github app name.",
+              "required": [],
+              "title": "appName",
+              "type": "string"
+            },
+            "appPrivateKey": {
+              "default": "",
+              "description": "This is for setting up the github app private key.",
+              "required": [],
+              "title": "appPrivateKey",
+              "type": "string"
+            },
+            "clientId": {
+              "default": "",
+              "description": "This is for setting up the github client id.",
+              "required": [],
+              "title": "clientId",
+              "type": "string"
+            },
+            "clientSecret": {
+              "default": "",
+              "description": "This is for setting up the github client secret.",
+              "required": [],
+              "title": "clientSecret",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the github enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "appName",
+            "appId",
+            "appPrivateKey"
+          ],
+          "title": "github",
+          "type": "object"
+        },
+        "gitlab": {
+          "additionalProperties": false,
+          "description": "This is for setting up the gitlab. More information about gitlab can be found here: https://docs.gitlab.com/ee/integration/oauth_provider.html",
+          "properties": {
+            "baseUrl": {
+              "default": "",
+              "description": "This is for setting up the gitlab base url.",
+              "required": [],
+              "title": "baseUrl",
+              "type": "string"
+            },
+            "clientId": {
+              "default": "",
+              "description": "This is for setting up the gitlab client id.",
+              "required": [],
+              "title": "clientId",
+              "type": "string"
+            },
+            "clientSecret": {
+              "default": "",
+              "description": "This is for setting up the gitlab client secret.",
+              "required": [],
+              "title": "clientSecret",
+              "type": "string"
+            },
+            "displayName": {
+              "default": "GitLab Connect",
+              "description": "This is for setting up the gitlab display name.",
+              "required": [],
+              "title": "displayName",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the gitlab enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "scopes": {
+              "description": "This is for setting up the gitlab scopes.",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "required": [],
+              "title": "scopes",
+              "type": "array"
+            },
+            "usernameClaim": {
+              "default": "preferred_username",
+              "description": "This is for setting up the gitlab username claim.",
+              "required": [],
+              "title": "usernameClaim",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "baseUrl",
+            "usernameClaim",
+            "displayName",
+            "scopes"
+          ],
+          "title": "gitlab",
+          "type": "object"
+        },
+        "google": {
+          "additionalProperties": false,
+          "description": "This is for setting up the google. More information about google can be found here: https://docs.getoutline.com/s/hosting/doc/google-hOuvtCmTqQ",
+          "properties": {
+            "clientId": {
+              "default": "",
+              "description": "This is for setting up the google client id.",
+              "required": [],
+              "title": "clientId",
+              "type": "string"
+            },
+            "clientSecret": {
+              "default": "",
+              "description": "This is for setting up the google client secret.",
+              "required": [],
+              "title": "clientSecret",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the google enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "clientId",
+            "clientSecret"
+          ],
+          "title": "google",
+          "type": "object"
+        },
+        "keycloak": {
+          "additionalProperties": false,
+          "description": "This is for setting up the keycloak. More details about the Keycloak OIDC implementation can be found here: https://www.keycloak.org/securing-apps/oidc-layers",
+          "properties": {
+            "baseUrl": {
+              "default": "",
+              "description": "This is for setting up the keycloak base url.",
+              "required": [],
+              "title": "baseUrl",
+              "type": "string"
+            },
+            "clientId": {
+              "default": "",
+              "description": "This is for setting up the keycloak client id.",
+              "required": [],
+              "title": "clientId",
+              "type": "string"
+            },
+            "clientSecret": {
+              "default": "",
+              "description": "This is for setting up the keycloak client secret.",
+              "required": [],
+              "title": "clientSecret",
+              "type": "string"
+            },
+            "displayName": {
+              "default": "Keycloak Connect",
+              "description": "This is for setting up the keycloak display name.",
+              "required": [],
+              "title": "displayName",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the keycloak enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "realmName": {
+              "default": "",
+              "description": "This is for setting up the keycloak realm name.",
+              "required": [],
+              "title": "realmName",
+              "type": "string"
+            },
+            "scopes": {
+              "description": "This is for setting up the keycloak scopes.",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "required": [],
+              "title": "scopes",
+              "type": "array"
+            },
+            "usernameClaim": {
+              "default": "preferred_username",
+              "description": "This is for setting up the keycloak username claim.",
+              "required": [],
+              "title": "usernameClaim",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "baseUrl",
+            "realmName",
+            "usernameClaim",
+            "displayName",
+            "scopes"
+          ],
+          "title": "keycloak",
+          "type": "object"
+        },
+        "oidc": {
+          "additionalProperties": false,
+          "description": "This is for setting up the oidc. More information about oidc can be found here: https://docs.getoutline.com/s/hosting/doc/oidc-8CPBm6uC0I",
+          "properties": {
+            "authUri": {
+              "default": "",
+              "description": "This is for setting up the oidc auth uri.",
+              "required": [],
+              "title": "authUri",
+              "type": "string"
+            },
+            "clientId": {
+              "default": "",
+              "description": "This is for setting up the oidc client id.",
+              "required": [],
+              "title": "clientId",
+              "type": "string"
+            },
+            "clientSecret": {
+              "default": "",
+              "description": "This is for setting up the oidc client secret.",
+              "required": [],
+              "title": "clientSecret",
+              "type": "string"
+            },
+            "displayName": {
+              "default": "OpenID Connect",
+              "description": "This is for setting up the oidc display name.",
+              "required": [],
+              "title": "displayName",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the oidc enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "logoutUri": {
+              "default": "",
+              "description": "This is for setting up the oidc logout uri. This is optional.",
+              "required": [],
+              "title": "logoutUri",
+              "type": "string"
+            },
+            "scopes": {
+              "description": "This is for setting up the oidc scopes.",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "required": [],
+              "title": "scopes",
+              "type": "array"
+            },
+            "tokenUri": {
+              "default": "",
+              "description": "This is for setting up the oidc token uri.",
+              "required": [],
+              "title": "tokenUri",
+              "type": "string"
+            },
+            "userInfoUri": {
+              "default": "",
+              "description": "This is for setting up the oidc user info uri.",
+              "required": [],
+              "title": "userInfoUri",
+              "type": "string"
+            },
+            "usernameClaim": {
+              "default": "preferred_username",
+              "description": "This is for setting up the oidc username claim.",
+              "required": [],
+              "title": "usernameClaim",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "clientId",
+            "clientSecret",
+            "authUri",
+            "tokenUri",
+            "userInfoUri",
+            "logoutUri",
+            "usernameClaim",
+            "displayName",
+            "scopes"
+          ],
+          "title": "oidc",
+          "type": "object"
+        },
+        "saml": {
+          "additionalProperties": false,
+          "description": "This is for setting up the saml. More information about saml can be found here: https://docs.getoutline.com/s/hosting/doc/saml-hCmJIfmAjt",
+          "properties": {
+            "cert": {
+              "default": "",
+              "description": "This is for setting up the saml cert.",
+              "required": [],
+              "title": "cert",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the saml enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "ssoEndpoint": {
+              "default": "",
+              "description": "This is for setting up the saml sso endpoint.",
+              "required": [],
+              "title": "ssoEndpoint",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "ssoEndpoint",
+            "cert"
+          ],
+          "title": "saml",
+          "type": "object"
+        },
+        "slack": {
+          "additionalProperties": false,
+          "description": "This is for setting up the slack. More information about slack can be found here: https://docs.getoutline.com/s/hosting/doc/slack-sgMujR8J9J",
+          "properties": {
+            "clientId": {
+              "default": "",
+              "description": "This is for setting up the slack client id.",
+              "required": [],
+              "title": "clientId",
+              "type": "string"
+            },
+            "clientSecret": {
+              "default": "",
+              "description": "This is for setting up the slack client secret.",
+              "required": [],
+              "title": "clientSecret",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the slack enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "clientId",
+            "clientSecret"
+          ],
+          "title": "slack",
+          "type": "object"
+        }
+      },
+      "required": [
+        "slack",
+        "google",
+        "azure",
+        "oidc",
+        "github",
+        "gitea",
+        "gitlab",
+        "discord",
+        "auth0",
+        "keycloak",
+        "saml"
+      ],
+      "title": "auth",
+      "type": "object"
+    },
+    "smtp": {
+      "additionalProperties": false,
+      "description": "This is for setting up the smtp. More information about smtp can be found here: https://docs.getoutline.com/s/hosting/doc/smtp-cqCJyZGMIB",
+      "properties": {
+        "fromEmail": {
+          "default": "",
+          "description": "This is for setting up the smtp from email.",
+          "required": [],
+          "title": "fromEmail",
+          "type": "string"
+        },
+        "host": {
+          "default": "",
+          "description": "This is for setting up the smtp host.",
+          "required": [],
+          "title": "host",
+          "type": "string"
+        },
+        "password": {
+          "default": "",
+          "description": "This is for setting up the smtp password.",
+          "required": [],
+          "title": "password",
+          "type": "string"
+        },
+        "port": {
+          "default": 587,
+          "description": "This is for setting up the smtp port.",
+          "required": [],
+          "title": "port",
+          "type": "integer"
+        },
+        "replyEmail": {
+          "default": "",
+          "description": "This is for setting up the smtp reply email.",
+          "required": [],
+          "title": "replyEmail",
+          "type": "string"
+        },
+        "secure": {
+          "default": true,
+          "description": "This is for setting up the smtp secure.",
+          "required": [],
+          "title": "secure",
+          "type": "boolean"
+        },
+        "tlsCiphers": {
+          "default": "",
+          "description": "This is for setting up the smtp tls ciphers.",
+          "required": [],
+          "title": "tlsCiphers",
+          "type": "string"
+        },
+        "username": {
+          "default": "",
+          "description": "This is for setting up the smtp username.",
+          "required": [],
+          "title": "username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "host",
+        "port",
+        "username",
+        "password",
+        "fromEmail",
+        "replyEmail",
+        "tlsCiphers",
+        "secure"
+      ],
+      "title": "smtp",
+      "type": "object"
+    },
+    "ingress": {
+      "additionalProperties": false,
+      "description": "This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/",
+      "properties": {
+        "annotations": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "default": {},
+          "description": "This is for setting up the ingress annotations.",
+          "required": [],
+          "title": "annotations",
+          "type": "object"
+        },
+        "className": {
+          "default": "",
+          "description": "This is for setting up the ingress class name.",
+          "required": [],
+          "title": "className",
+          "type": "string"
+        },
+        "enabled": {
+          "default": false,
+          "description": "This is for setting up the ingress enabled.",
+          "required": [],
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["host", "paths"],
+            "properties": {
+              "host": {
+                "type": "string"
+              },
+              "paths": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "path": {
+                      "type": "string"
+                    },
+                    "pathType": {
+                      "type": "string",
+                      "enum": ["Exact", "Prefix", "ImplementationSpecific"]
+                    }
+                  },
+                  "required": [
+                    "path",
+                    "pathType"
+                  ],
+                  "title": "paths"
+                }
+              }
+            },
+            "title": "hosts",
+            "minItems": 1
+          }
+        },
+        "tls": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "secretName": {
+                "type": "string"
+              },
+              "hosts": {
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1,
+                "required": [],
+                "title": "hosts",
+                "type": "array"
+              }
+            },
+            "required": [
+              "secretName",
+              "hosts"
+            ],
+            "title": "tls"
+          }
+        }
+      },
+      "required": [
+        "enabled",
+        "className",
+        "annotations",
+        "hosts",
+        "tls"
+      ],
+      "title": "ingress",
+      "type": "object"
+    },
+    "resources": {
+      "additionalProperties": false,
+      "properties": {
+        "limits": {
+          "additionalProperties": true,
+          "description": "This is to setup the resources limits more information can be found here: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+          "required": [],
+          "title": "limits",
+          "type": "object"
+        },
+        "requests": {
+          "additionalProperties": true,
+          "description": "This is to setup the resources requests more information can be found here: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/",
+          "required": [],
+          "title": "requests",
+          "type": "object"
+        }
+      },
+      "title": "resources",
+      "type": "object"
+    },
+    "livenessProbe": {
+      "additionalProperties": true,
+      "description": "This is to setup the liveness probe more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
+      "properties": {
+        "failureThreshold": {
+          "default": 5,
+          "description": "This is for setting up the failure threshold.",
+          "required": [],
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": true,
+          "description": "This is for setting up the http get.",
+          "properties": {
+            "path": {
+              "default": "/_health",
+              "description": "This is for setting up the path.",
+              "required": [],
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": "http",
+              "description": "This is for setting up the port.",
+              "required": [],
+              "title": "port",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "initialDelaySeconds": {
+          "default": 10,
+          "description": "This is for setting up the initial delay seconds.",
+          "required": [],
+          "title": "initialDelaySeconds",
+          "type": "integer"
+        },
+        "periodSeconds": {
+          "default": 30,
+          "description": "This is for setting up the period seconds.",
+          "required": [],
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 3,
+          "description": "This is for setting up the timeout seconds.",
+          "required": [],
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet"
+      ],
+      "title": "livenessProbe",
+      "type": "object"
+    },
+    "readinessProbe": {
+      "additionalProperties": true,
+      "description": "This is to setup the readiness probe more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/",
+      "properties": {
+        "failureThreshold": {
+          "default": 5,
+          "description": "This is for setting up the failure threshold.",
+          "required": [],
+          "title": "failureThreshold",
+          "type": "integer"
+        },
+        "httpGet": {
+          "additionalProperties": true,
+          "description": "This is for setting up the http get.",
+          "properties": {
+            "path": {
+              "default": "/_health",
+              "description": "This is for setting up the path.",
+              "required": [],
+              "title": "path",
+              "type": "string"
+            },
+            "port": {
+              "default": "http",
+              "description": "This is for setting up the port.",
+              "required": [],
+              "title": "port",
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "port"
+          ],
+          "title": "httpGet",
+          "type": "object"
+        },
+        "initialDelaySeconds": {
+          "default": 10,
+          "description": "This is for setting up the initial delay seconds.",
+          "required": [],
+          "title": "initialDelaySeconds",
+          "type": "integer"
+        },
+        "periodSeconds": {
+          "default": 30,
+          "description": "This is for setting up the period seconds.",
+          "required": [],
+          "title": "periodSeconds",
+          "type": "integer"
+        },
+        "timeoutSeconds": {
+          "default": 3,
+          "description": "This is for setting up the timeout seconds.",
+          "required": [],
+          "title": "timeoutSeconds",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "httpGet"
+      ],
+      "title": "readinessProbe",
+      "type": "object"
+    },
+    "dbHealthCheck": {
+      "additionalProperties": false,
+      "description": "This is for setting up the db health check.",
+      "properties": {
+        "enabled": {
+          "default": true,
+          "description": "This is for setting up the db health check enabled.",
+          "required": [],
+          "title": "enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "enabled"
+      ],
+      "title": "dbHealthCheck",
+      "type": "object"
+    },
+    "initContainers": {
+      "description": "Additional init containers on the output Deployment definition.",
+      "items": {
+        "additionalProperties": true,
+        "required": []
+      },
+      "required": [],
+      "title": "initContainers",
+      "type": "array"
+    },
+    "extraContainers": {
+      "description": "Additional containers (sidecars) on the output Deployment definition.",
+      "items": {
+        "additionalProperties": true,
+        "required": []
+      },
+      "required": [],
+      "title": "extraContainers",
+      "type": "array"
+    },
+    "volumes": {
+      "description": "Additional volumes on the output Deployment definition.",
+      "items": {
+        "additionalProperties": true,
+        "required": []
+      },
+      "required": [],
+      "title": "volumes",
+      "type": "array"
+    },
+    "volumeMounts": {
+      "description": "Additional volumeMounts on the output Deployment definition.",
+      "items": {
+        "additionalProperties": true,
+        "required": []
+      },
+      "required": [],
+      "title": "volumeMounts",
+      "type": "array"
+    },
+    "nodeSelector": {
+      "additionalProperties": true,
+      "description": "For more information checkout: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector",
+      "required": [],
+      "title": "nodeSelector",
+      "type": "object"
+    },
+    "tolerations": {
+      "description": "For more information checkout: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/",
+      "items": {
+        "additionalProperties": true,
+        "required": []
+      },
+      "required": [],
+      "title": "tolerations",
+      "type": "array"
+    },
+    "affinity": {
+      "additionalProperties": true,
+      "description": "For more information checkout: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity",
+      "required": [],
+      "title": "affinity",
+      "type": "object"
+    },
+    "redis": {
+      "additionalProperties": true,
+      "description": "Bitnami Redis configuration",
+      "properties": {
+        "enabled": {
+          "default": false,
+          "description": "Enable redis",
+          "required": [],
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "architecture": {
+          "default": "standalone",
+          "enum": ["standalone", "replication"],
+          "required": [],
+          "title": "architecture",
+          "type": "string"
+        },
+        "master": {
+          "additionalProperties": true,
+          "properties": {
+            "persistence": {
+              "additionalProperties": true,
+              "properties": {
+                "enabled": {
+                  "default": false,
+                  "required": [],
+                  "title": "enabled",
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "enabled"
+              ],
+              "title": "persistence",
+              "type": "object"
+            },
+            "service": {
+              "additionalProperties": true,
+              "properties": {
+                "ports": {
+                  "additionalProperties": true,
+                  "properties": {
+                    "redis": {
+                      "default": 6379,
+                      "description": "This is for setting up the redis port.",
+                      "minimum": 1,
+                      "maximum": 65535,
+                      "required": [],
+                      "title": "redis",
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "redis"
+                  ],
+                  "title": "ports",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "ports"
+              ],
+              "title": "service",
+              "type": "object"
+            }
+          },
+          "required": [
+            "service",
+            "persistence"
+          ],
+          "title": "master",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "architecture",
+        "master"
+      ],
+      "title": "redis",
+      "type": "object"
+    },
+    "externalRedis": {
+      "additionalProperties": false,
+      "description": "External Redis parameters",
+      "properties": {
+        "existingSecret": {
+          "default": "",
+          "description": "The name of an existing secret with Redis (must contain key `redis-password`) and Sentinel credentials.\nWhen it's set, the `externalRedis.password` parameter is ignored",
+          "required": [],
+          "title": "existingSecret",
+          "type": "string"
+        },
+        "host": {
+          "default": "",
+          "description": "External Redis server host",
+          "required": [],
+          "title": "host",
+          "type": "string"
+        },
+        "password": {
+          "default": "",
+          "description": "External Redis password",
+          "required": [],
+          "title": "password",
+          "type": "string"
+        },
+        "port": {
+          "default": 6379,
+          "description": "External Redis server port",
+          "minimum": 1,
+          "maximum": 65535,
+          "required": [],
+          "title": "port",
+          "type": "integer"
+        },
+        "username": {
+          "default": "",
+          "description": "External Redis username",
+          "required": [],
+          "title": "username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "host",
+        "username",
+        "password",
+        "port",
+        "existingSecret"
+      ],
+      "title": "externalRedis",
+      "type": "object"
+    },
+    "database": {
+      "additionalProperties": false,
+      "description": "Database configuration",
+      "properties": {
+        "connectionPoolMax": {
+          "default": "20",
+          "description": "The maximum number of connections in the connection pool.",
+          "required": [],
+          "title": "connectionPoolMax",
+          "type": "string"
+        },
+        "connectionPoolMin": {
+          "default": "",
+          "description": "The minimum number of connections in the connection pool.",
+          "required": [],
+          "title": "connectionPoolMin",
+          "type": "string"
+        },
+        "sslMode": {
+          "default": "disable",
+          "enum": ["disable", "allow", "require", "prefer", "verify-ca", "verify-full"],
+          "description": "The SSL mode to use for the database connection.",
+          "required": [],
+          "title": "sslMode",
+          "type": "string"
+        }
+      },
+      "required": [
+        "connectionPoolMin",
+        "connectionPoolMax",
+        "sslMode"
+      ],
+      "title": "database",
+      "type": "object"
+    },
+    "postgresql": {
+      "additionalProperties": true,
+      "description": "Bitnami PostgreSQL configuration",
+      "properties": {
+        "architecture": {
+          "default": "standalone",
+          "enum": ["standalone", "replication"],
+          "description": "Enable postgresql architecture.",
+          "required": [],
+          "title": "architecture",
+          "type": "string"
+        },
+        "auth": {
+          "additionalProperties": true,
+          "description": "This is for setting up the auth.",
+          "properties": {
+            "database": {
+              "default": "outline",
+              "description": "This is for setting up the auth database.",
+              "required": [],
+              "title": "database",
+              "type": "string"
+            },
+            "password": {
+              "default": "",
+              "description": "This is for setting up the auth password.",
+              "required": [],
+              "title": "password",
+              "type": "string"
+            },
+            "username": {
+              "default": "",
+              "description": "This is for setting up the auth username.",
+              "required": [],
+              "title": "username",
+              "type": "string"
+            }
+          },
+          "required": [
+            "username",
+            "password",
+            "database"
+          ],
+          "title": "auth",
+          "type": "object"
+        },
+        "enabled": {
+          "default": false,
+          "description": "Enable postgresql",
+          "required": [],
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "primary": {
+          "additionalProperties": true,
+          "description": "This is for setting up the primary service.",
+          "properties": {
+            "persistence": {
+              "additionalProperties": true,
+              "description": "This is for setting up the persistence.",
+              "properties": {
+                "enabled": {
+                  "default": true,
+                  "description": "This is for setting up the persistence enabled.",
+                  "required": [],
+                  "title": "enabled",
+                  "type": "boolean"
+                },
+                "existingClaim": {
+                  "default": "",
+                  "description": "This is for setting up the persistence existing claim.",
+                  "required": [],
+                  "title": "existingClaim",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "enabled",
+                "existingClaim"
+              ],
+              "title": "persistence",
+              "type": "object"
+            },
+            "service": {
+              "additionalProperties": true,
+              "description": "This is for setting up the primary service.",
+              "properties": {
+                "ports": {
+                  "additionalProperties": true,
+                  "description": "This is for setting up the service ports.",
+                  "properties": {
+                    "postgresql": {
+                      "default": 5432,
+                      "description": "This is for setting up the postgresql port.",
+                      "required": [],
+                      "title": "postgresql",
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "postgresql"
+                  ],
+                  "title": "ports",
+                  "type": "object"
+                }
+              },
+              "required": [
+                "ports"
+              ],
+              "title": "service",
+              "type": "object"
+            }
+          },
+          "required": [
+            "service",
+            "persistence"
+          ],
+          "title": "primary",
+          "type": "object"
+        }
+      },
+      "required": [
+        "enabled",
+        "architecture",
+        "primary",
+        "auth"
+      ],
+      "title": "postgresql",
+      "type": "object"
+    },
+    "externalPostgresql": {
+      "additionalProperties": false,
+      "description": "External PostgreSQL parameters",
+      "properties": {
+        "database": {
+          "default": "outline",
+          "description": "The name of the external PostgreSQL database. For more information: https://docs.getoutline.com/s/hosting/doc/docker-7pfeLP5a8t",
+          "required": [],
+          "title": "database",
+          "type": "string"
+        },
+        "existingSecret": {
+          "default": "",
+          "description": "The name of an existing secret with PostgreSQL (must contain key `postgres-password`) and credentials.\nWhen it's set, the `externalPostgresql.password` parameter is ignored",
+          "required": [],
+          "title": "existingSecret",
+          "type": "string"
+        },
+        "host": {
+          "default": "",
+          "description": "External PostgreSQL server host",
+          "required": [],
+          "title": "host",
+          "type": "string"
+        },
+        "password": {
+          "default": "",
+          "description": "External PostgreSQL password",
+          "required": [],
+          "title": "password",
+          "type": "string"
+        },
+        "port": {
+          "default": 5432,
+          "minimum": 1,
+          "maximum": 65535,
+          "description": "External PostgreSQL server port",
+          "required": [],
+          "title": "port",
+          "type": "integer"
+        },
+        "username": {
+          "default": "postgres",
+          "description": "External PostgreSQL username",
+          "required": [],
+          "title": "username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "host",
+        "username",
+        "password",
+        "port",
+        "database",
+        "existingSecret"
+      ],
+      "title": "externalPostgresql",
+      "type": "object"
+    },
+    "minio": {
+      "additionalProperties": true,
+      "description": "Minio configuration",
+      "properties": {
+        "buckets": {
+          "description": "Minio buckets",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "default": "outline",
+                "description": "This is for setting up the bucket name.",
+                "required": [],
+                "title": "name", 
+                "type": "string"
+              },
+              "policy": {
+                "default": "none",
+                "enum": ["none", "download", "upload", "public"],
+                "description": "This is for setting up the bucket policy.",
+                "required": [],
+                "title": "policy",
+                "type": "string"
+              },
+              "purge": {
+                "default": false,
+                "description": "This is for setting up the purge.",
+                "required": [],
+                "title": "purge",
+                "type": "boolean"
+              },
+              "versioning": {
+                "default": false,
+                "description": "This is for setting up the versioning.",
+                "required": [],
+                "title": "versioning",
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "name",
+              "policy",
+              "purge",
+              "versioning"
+            ],
+            "type": "object"
+          },
+          "required": [],
+          "title": "buckets",
+          "type": "array"
+        },
+        "consoleIngress": {
+          "additionalProperties": true,
+          "description": "Minio console ingress",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "description": "Enable ingress",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "hosts": {
+              "description": "Ingress hosts",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "required": [],
+              "title": "hosts",
+              "type": "array"
+            },
+            "path": {
+              "default": "/",
+              "description": "Ingress path",
+              "required": [],
+              "title": "path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "hosts",
+            "path"
+          ],
+          "title": "consoleIngress",
+          "type": "object"
+        },
+        "deploymentUpdate": {
+          "additionalProperties": true,
+          "description": "Minio deployment update strategy",
+          "properties": {
+            "type": {
+              "default": "Recreate",
+              "required": [],
+              "title": "type",
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "title": "deploymentUpdate",
+          "type": "object"
+        },
+        "drivesPerNode": {
+          "default": 1,
+          "description": "Number of drives attached to a node",
+          "required": [],
+          "title": "drivesPerNode",
+          "type": "integer"
+        },
+        "enabled": {
+          "default": false,
+          "description": "Enable minio",
+          "required": [],
+          "title": "enabled",
+          "type": "boolean"
+        },
+        "ingress": {
+          "additionalProperties": true,
+          "description": "Minio ingress. Outline will use this ingress to access Minio. It's required when fileStorage.mode is s3.",
+          "properties": {
+            "enabled": {
+              "default": true,
+              "description": "Enable ingress",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "hosts": {
+              "description": "Ingress hosts",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "required": [],
+              "title": "hosts",
+              "type": "array"
+            },
+            "path": {
+              "default": "/",
+              "description": "Ingress path",
+              "required": [],
+              "title": "path",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "hosts",
+            "path"
+          ],
+          "title": "ingress",
+          "type": "object"
+        },
+        "mode": {
+          "default": "standalone",
+          "description": "Minio mode",
+          "required": [],
+          "title": "mode",
+          "type": "string"
+        },
+        "persistence": {
+          "additionalProperties": true,
+          "description": "Minio persistence",
+          "properties": {
+            "accessMode": {
+              "default": "ReadWriteOnce",
+              "description": "Minio persistence access mode",
+              "required": [],
+              "title": "accessMode",
+              "type": "string"
+            },
+            "annotations": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "default": {},
+              "description": "Minio persistence annotations",
+              "required": [],
+              "title": "annotations",
+              "type": "object"
+            },
+            "enabled": {
+              "default": true,
+              "description": "Enable persistence",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "existingClaim": {
+              "default": "",
+              "description": "Minio persistence existing claim",
+              "required": [],
+              "title": "existingClaim",
+              "type": "string"
+            },
+            "size": {
+              "default": "40Gi",
+              "pattern": "^[0-9]+(Gi|Mi|Ki|G|M|K)$",
+              "description": "Minio persistence size",
+              "required": [],
+              "title": "size",
+              "type": "string"
+            },
+            "storageClass": {
+              "default": "",
+              "description": "Minio persistence storage class",
+              "required": [],
+              "title": "storageClass",
+              "type": "string"
+            },
+            "subPath": {
+              "default": "",
+              "description": "Minio persistence sub path",
+              "required": [],
+              "title": "subPath",
+              "type": "string"
+            },
+            "volumeName": {
+              "default": "",
+              "description": "Minio persistence volume name",
+              "required": [],
+              "title": "volumeName",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "annotations",
+            "existingClaim",
+            "storageClass",
+            "volumeName",
+            "accessMode",
+            "size",
+            "subPath"
+          ],
+          "title": "persistence",
+          "type": "object"
+        },
+        "policies": {
+          "description": "Minio policies",
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "name": {
+                "default": "outline-policy",
+                "description": "This is for setting up the policy name.",
+                "required": [],
+                "title": "name",
+                "type": "string"
+              },
+              "statements": {
+                "items": {
+                  "additionalProperties": true,
+                  "properties": {
+                    "actions": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "required": [],
+                      "title": "actions", 
+                      "type": "array"
+                    },
+                    "resources": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "minItems": 1,
+                      "required": [],
+                      "title": "resources",
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "actions",
+                    "resources"
+                  ],
+                  "type": "object"
+                },
+                "required": [],
+                "title": "statements",
+                "type": "array"
+              }
+            },
+            "required": [
+              "name",
+              "statements"
+            ],
+            "type": "object"
+          },
+          "required": [],
+          "title": "policies",
+          "type": "array"
+        },
+        "pools": {
+          "default": 1,
+          "minimum": 1,
+          "description": "Number of expanded MinIO clusters",
+          "required": [],
+          "title": "pools",
+          "type": "integer"
+        },
+        "replicas": {
+          "default": 1,
+          "minimum": 1,
+          "description": "Number of MinIO containers running",
+          "required": [],
+          "title": "replicas",
+          "type": "integer"
+        },
+        "resources": {
+          "additionalProperties": true,
+          "description": "Minio resources",
+          "properties": {
+            "requests": {
+              "additionalProperties": true,
+              "description": "Minio requests",
+              "properties": {
+                "memory": {
+                  "default": "1Gi",
+                  "pattern": "^[0-9]+(Gi|Mi|Ki|G|M|K)$",
+                  "description": "Minio requests memory",
+                  "required": [],
+                  "title": "memory",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "memory"
+              ],
+              "title": "requests",
+              "type": "object"
+            }
+          },
+          "required": [
+            "requests"
+          ],
+          "title": "resources",
+          "type": "object"
+        },
+        "rootPassword": {
+          "default": "",
+          "description": "Minio root password. Length should be at least 8 characters.",
+          "required": [],
+          "title": "rootPassword",
+          "type": "string"
+        },
+        "rootUser": {
+          "default": "",
+          "description": "Minio root user. Length should be at least 3 characters.",
+          "required": [],
+          "title": "rootUser",
+          "type": "string"
+        },
+        "statefulSetUpdate": {
+          "additionalProperties": true,
+          "description": "Minio statefulset update strategy",
+          "properties": {
+            "updateStrategy": {
+              "default": "Recreate",
+              "required": [],
+              "title": "updateStrategy",
+              "type": "string"
+            }
+          },
+          "required": [
+            "updateStrategy"
+          ],
+          "title": "statefulSetUpdate",
+          "type": "object"
+        },
+        "users": {
+          "description": "Minio users",
+          "items": {
+            "additionalProperties": true,
+            "properties": {
+              "accessKey": {
+                "default": "outline",
+                "required": [],
+                "title": "accessKey", 
+                "type": "string"
+              },
+              "policy": {
+                "default": "outline-policy",
+                "description": "Outline user policy",
+                "required": [],
+                "title": "policy",
+                "type": "string"
+              },
+              "secretKey": {
+                "default": "Change_Me",
+                "description": "Outline user secret key",
+                "required": [],
+                "title": "secretKey",
+                "type": "string"
+              }
+            },
+            "required": [
+              "accessKey",
+              "secretKey", 
+              "policy"
+            ],
+            "type": "object"
+          },
+          "required": [],
+          "title": "users",
+          "type": "array"
+        }
+      },
+      "required": [
+        "enabled",
+        "mode",
+        "deploymentUpdate",
+        "statefulSetUpdate",
+        "drivesPerNode",
+        "replicas",
+        "pools",
+        "rootUser",
+        "rootPassword",
+        "resources",
+        "persistence",
+        "ingress",
+        "consoleIngress",
+        "policies",
+        "users",
+        "buckets"
+      ],
+      "title": "minio",
+      "type": "object"
+    },
+    "extraEnvVars": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "description": "This is for setting up the extra environment variables.",
+      "required": [],
+      "title": "extraEnvVars",
+      "type": "object"
+    },
+    "extraSecretNamesForEnvFrom": {
+      "description": "This is for setting up the extra secrets for environment variables.",
+      "items": {
+        "type": "string"
+      },
+      "required": [],
+      "title": "extraSecretNamesForEnvFrom",
+      "type": "array"
+    },
+    "integrations": {
+      "additionalProperties": false,
+      "description": "This is for setting up the integrations. More information about integrations can be found here: https://docs.getoutline.com/s/hosting/doc/integrations-Oav5MXNDJk",
+      "properties": {
+        "dropbox": {
+          "additionalProperties": false,
+          "description": "This is for setting up the dropbox.",
+          "properties": {
+            "appKey": {
+              "default": "",
+              "description": "This is for setting up the dropbox app key.",
+              "required": [],
+              "title": "appKey",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the dropbox enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled",
+            "appKey"
+          ],
+          "title": "dropbox",
+          "type": "object"
+        },
+        "iframely": {
+          "additionalProperties": false,
+          "description": "This is for setting up the iframely. More information about iframely can be found here: https://docs.getoutline.com/s/hosting/doc/iframely-HwLF1EZ9mo",
+          "properties": {
+            "apiKey": {
+              "default": "",
+              "description": "This is for setting up the iframely api key.",
+              "required": [],
+              "title": "apiKey",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the iframely enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "url": {
+              "default": "",
+              "description": "This is for setting up the iframely url.",
+              "required": [],
+              "title": "url",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "url",
+            "apiKey"
+          ],
+          "title": "iframely",
+          "type": "object"
+        },
+        "openAI": {
+          "additionalProperties": false,
+          "description": "This is for setting up the openai. More information about openai can be found here: https://docs.getoutline.com/s/hosting/doc/openai-iiTYCN9Nct",
+          "properties": {
+            "apiKey": {
+              "default": "",
+              "description": "This is for setting up the openai api key.",
+              "required": [],
+              "title": "apiKey",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the openai enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "url": {
+              "default": "",
+              "description": "This is for setting up the openai url.",
+              "required": [],
+              "title": "url",
+              "type": "string"
+            },
+            "vectorDatabaseUrl": {
+              "default": "",
+              "description": "This is for setting up the openai vector database url.",
+              "required": [],
+              "title": "vectorDatabaseUrl",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "url",
+            "apiKey",
+            "vectorDatabaseUrl"
+          ],
+          "title": "openAI",
+          "type": "object"
+        },
+        "pdfExport": {
+          "additionalProperties": false,
+          "description": "This is for setting up the pdf export. More information about pdf export can be found here: https://docs.getoutline.com/s/hosting/doc/pdf-export-7Dn1hCyUo5",
+          "properties": {
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the pdf export enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "gotenbergUrl": {
+              "default": "",
+              "description": "This is for setting up the pdf export gotenberg url.",
+              "required": [],
+              "title": "gotenbergUrl",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "gotenbergUrl"
+          ],
+          "title": "pdfExport",
+          "type": "object"
+        },
+        "sentry": {
+          "additionalProperties": false,
+          "description": "This is for setting up the sentry. More information about sentry can be found here: https://docs.getoutline.com/s/hosting/doc/sentry-jxcFttcDl5",
+          "properties": {
+            "dsn": {
+              "default": "",
+              "description": "This is for setting up the sentry dsn.",
+              "required": [],
+              "title": "dsn",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the sentry enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "tunnel": {
+              "default": "",
+              "description": "This is for setting up the sentry tunnel.",
+              "required": [],
+              "title": "tunnel",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "dsn",
+            "tunnel"
+          ],
+          "title": "sentry",
+          "type": "object"
+        },
+        "slack": {
+          "additionalProperties": false,
+          "description": "This is for setting up the slack. More information about slack can be found here: https://docs.getoutline.com/s/hosting/doc/slack-G2mc8DOJHk",
+          "properties": {
+            "appId": {
+              "default": "",
+              "description": "This is for setting up the slack app id.",
+              "required": [],
+              "title": "appId",
+              "type": "string"
+            },
+            "enabled": {
+              "default": false,
+              "description": "This is for setting up the slack enabled.",
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            },
+            "messageActions": {
+              "default": true,
+              "description": "This is for setting up the slack message actions.",
+              "required": [],
+              "title": "messageActions",
+              "type": "boolean"
+            },
+            "verificationToken": {
+              "default": "",
+              "description": "This is for setting up the slack verification token.",
+              "required": [],
+              "title": "verificationToken",
+              "type": "string"
+            }
+          },
+          "required": [
+            "enabled",
+            "verificationToken",
+            "appId",
+            "messageActions"
+          ],
+          "title": "slack",
+          "type": "object"
+        }
+      },
+      "required": [
+        "iframely",
+        "openAI",
+        "pdfExport",
+        "sentry",
+        "slack",
+        "dropbox"
+      ],
+      "title": "integrations",
+      "type": "object"
+    }
+  },
+  "required": [
+    "replicaCount",
+    "image",
+    "imagePullSecrets",
+    "nameOverride",
+    "fullnameOverride",
+    "strategy",
+    "serviceAccount",
+    "podAnnotations",
+    "podLabels",
+    "podSecurityContext",
+    "securityContext",
+    "service",
+    "secretKey",
+    "utilsSecret",
+    "defaultLanguage",
+    "rateLimiter",
+    "autoUpdate",
+    "web",
+    "logging",
+    "fileStorage",
+    "auth",
+    "integrations",
+    "smtp",
+    "extraEnvVars",
+    "extraSecretNamesForEnvFrom",
+    "ingress",
+    "resources",
+    "livenessProbe",
+    "readinessProbe",
+    "dbHealthCheck",
+    "initContainers",
+    "extraContainers",
+    "volumes",
+    "volumeMounts",
+    "nodeSelector",
+    "tolerations",
+    "affinity",
+    "redis",
+    "externalRedis",
+    "database",
+    "postgresql",
+    "externalPostgresql",
+    "minio"
+  ],
+  "type": "object"
+}

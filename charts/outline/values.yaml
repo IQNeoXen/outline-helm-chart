@@ -1,0 +1,759 @@
+# yaml-language-server: $schema=values.schema.json
+# Default values for outline.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 1
+
+# -- This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: outlinewiki/outline
+  # -- This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # -- Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+# -- This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+imagePullSecrets: []
+
+# -- This is to override the chart name.
+nameOverride: ""
+
+# -- This is to override the full name of the chart.
+fullnameOverride: ""
+
+# -- This will set the deployment strategy more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy
+strategy:
+  type: "RollingUpdate"
+  rollingUpdate:
+    maxSurge: "25%"
+    maxUnavailable: "25%"
+
+# -- This section builds out the service account more information can be found here: https://kubernetes.io/docs/concepts/security/service-accounts/
+serviceAccount:
+  # -- Specifies whether a service account should be created
+  create: true
+
+  # -- Automatically mount a ServiceAccount's API credentials?
+  automount: true
+
+  # -- Annotations to add to the service account. AWS EKS users can assign role arn from here.
+  # Please find more information from here:
+  # https://docs.aws.amazon.com/eks/latest/userguide/associate-service-account-role.html
+  annotations: {}
+    # eks.amazonaws.com/role-arn: ""
+
+  # -- The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+# -- This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/
+podAnnotations: {}
+
+# -- This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
+podLabels: {}
+
+# -- This is for setting Security Context to a Pod. For more information checkout: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+podSecurityContext: {}
+  # fsGroup: 2000
+
+# -- This is for setting Security Context to a Container. For more information checkout: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+# -- This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # -- This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  # -- This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 3000
+  # -- Default Service name
+  name: http
+  # -- Additional service annotations
+  annotations: {}
+
+# -- This is for setting up the secret key. It will be auto generated if not set.
+secretKey: ""
+
+# -- This is for setting up the utils secret. It will be auto generated if not set.
+utilsSecret: ""
+
+# -- This is for setting up the default language. See translate.getoutline.com for a list of available language codes and their rough percentage translated
+defaultLanguage: en_US
+
+# -- This is for setting up the rate limiter.
+rateLimiter:
+  # -- This is for setting up the rate limiter enabled.
+  enabled: false
+  # -- This is for setting up the rate limiter limit.
+  limit: 100
+  # -- This is for setting up the rate limiter window.
+  window: 60
+
+# -- This is for setting up the auto update.
+autoUpdate:
+  # -- This is for setting up the auto update enabled.
+  enabled: false
+  # -- This is for setting up the enable telemetry.
+  telemetry: false
+
+# -- This is for setting up the web.
+web:
+  # -- This is for setting up the web concurrency.
+  concurrency: 1
+  # -- This is for setting up the web force https.
+  forceHttps: true
+  # -- This is for setting up the skip ssl verification to allow insecure connections.
+  skipSSLVerification: false
+
+# -- This is for setting up the logging.
+logging:
+  # -- This is for setting up the logging level.
+  level: info # error, warn, info, http, verbose, debug and silly
+  # -- This is for setting up the extra debug. Available modules:
+  #    - lifecycle
+  #    - http
+  #    - editor
+  #    - router
+  #    - collaboration
+  #    - misc
+  #    - store
+  #    - plugins
+  #    - policies
+  extraDebug: [] # "lifecycle", "http", "editor", "router", "collaboration", "misc", "store", "plugins", "policies"
+
+# -- This is for setting up the file storage. More information about file storage can be found here: https://docs.getoutline.com/s/hosting/doc/file-storage-N4M0T6Ypu7
+fileStorage:
+  # -- This is for setting up the file storage mode. Possible values are: local or s3
+  mode: local # local or s3
+  # -- This is for setting up the file storage upload max size.
+  uploadMaxSize: "262144000"
+  # -- This is for setting up the file storage import max size.
+  importMaxSize: ""
+  # -- This is for setting up the file storage workspace import max size.
+  workspaceImportMaxSize: ""
+
+  # -- This is for setting up the local file storage.
+  local:
+    # -- This is for setting up the local file storage root directory.
+    rootDir: /var/lib/outline/data
+    # -- This is for setting up the local file storage persistence.
+    persistence:
+      # -- This is for setting up the local file storage persistence enabled.
+      enabled: false
+      # -- This is for setting up the local file storage persistence access modes.
+      accessModes:
+        - ReadWriteOnce
+      # -- This is for setting up the local file storage persistence annotations.
+      annotations: {}
+      # -- This is for setting up the local file storage persistence existing claim.
+      existingClaim: ""
+      # -- This is for setting up the local file storage persistence size.
+      size: 8Gi
+      # -- This is for setting up the local file storage persistence storage class.
+      storageClass: ""
+      # -- This is for setting up the local file storage persistence volume mode.
+      volumeMode: ""
+
+  # -- This is for setting up the s3 file storage.
+  s3:
+    # -- This is for setting up the s3 file storage existing secret. Must contain access-key-id and secret-access-key keys.
+    existingSecret: ""
+    # -- This is for setting up the s3 file storage bucket.
+    bucket: outline
+    # -- This is for setting up the s3 file storage access key id.
+    accessKeyId: ""
+    # -- This is for setting up the s3 file storage secret access key.
+    secretAccessKey: ""
+    # -- This is for setting up the s3 file storage region.
+    region: us-east-1
+    # -- This is for setting up the s3 file storage accelerate url.
+    accelerateUrl: ""
+    # -- This is for setting up the s3 file storage bucket url.
+    bucketUrl: ""
+    # -- This is for setting up the s3 file storage force path style.
+    forcePathStyle: true
+    # -- This is for setting up the s3 file storage acl.
+    acl: private
+
+# -- This is for setting up the auth.
+auth:
+
+  # -- This is for setting up the slack. More information about slack can be found here: https://docs.getoutline.com/s/hosting/doc/slack-sgMujR8J9J
+  slack:
+    # -- This is for setting up the slack enabled.
+    enabled: false
+    # -- This is for setting up the slack client id.
+    clientId: ""
+    # -- This is for setting up the slack client secret.
+    clientSecret: ""
+
+  # -- This is for setting up the google. More information about google can be found here: https://docs.getoutline.com/s/hosting/doc/google-hOuvtCmTqQ
+  google:
+    # -- This is for setting up the google enabled.
+    enabled: false
+    # -- This is for setting up the google client id.
+    clientId: ""
+    # -- This is for setting up the google client secret.
+    clientSecret: ""
+
+  # -- This is for setting up the azure. More information about azure can be found here: https://docs.getoutline.com/s/hosting/doc/microsoft-entra-UVz6jsIOcv
+  azure:
+    # -- This is for setting up the azure enabled.
+    enabled: false
+    # -- This is for setting up the azure client id.
+    clientId: ""
+    # -- This is for setting up the azure client secret.
+    clientSecret: ""
+    # -- This is for setting up the azure resource app id. This is optional.
+    resourceAppId: ""
+    # -- This is for setting up the azure tenant id. This is optional.
+    tenantId: ""
+
+  # -- This is for setting up the oidc. More information about oidc can be found here: https://docs.getoutline.com/s/hosting/doc/oidc-8CPBm6uC0I
+  oidc:
+    # -- This is for setting up the oidc enabled.
+    enabled: false
+    # -- This is for setting up the oidc client id.
+    clientId: ""
+    # -- This is for setting up the oidc client secret.
+    clientSecret: ""
+    # -- This is for setting up the oidc auth uri.
+    authUri: ""
+    # -- This is for setting up the oidc token uri.
+    tokenUri: ""
+    # -- This is for setting up the oidc user info uri.
+    userInfoUri: ""
+    # -- This is for setting up the oidc logout uri. This is optional.
+    logoutUri: ""
+    # -- This is for setting up the oidc username claim.
+    usernameClaim: preferred_username
+    # -- This is for setting up the oidc display name.
+    displayName: "OpenID Connect"
+    # -- This is for setting up the oidc scopes.
+    scopes:
+      - openid
+      - profile
+      - email
+
+  # -- This is for setting up the github. More information about github can be found here: https://docs.getoutline.com/s/hosting/doc/github-GchT3NNxI9
+  github:
+    # -- This is for setting up the github enabled.
+    enabled: false
+    # -- This is for setting up the github client id.
+    clientId: ""
+    # -- This is for setting up the github client secret.
+    clientSecret: ""
+    # -- This is for setting up the github app name.
+    appName: ""
+    # -- This is for setting up the github app id.
+    appId: ""
+    # -- This is for setting up the github app private key.
+    appPrivateKey: ""
+
+  # -- This is for setting up the gitea. More information about gitea can be found here: https://docs.gitea.com/development/oauth2-provider#endpoints
+  gitea:
+    # -- This is for setting up the gitea enabled.
+    enabled: false
+    # -- This is for setting up the gitea client id.
+    clientId: ""
+    # -- This is for setting up the gitea client secret.
+    clientSecret: ""
+    # -- This is for setting up the gitea base url.
+    baseUrl: ""
+    # -- This is for setting up the gitea username claim.
+    usernameClaim: preferred_username
+    # -- This is for setting up the gitea display name.
+    displayName: "Gitea Connect"
+    # -- This is for setting up the gitea scopes.
+    scopes:
+      - openid
+      - profile
+      - email
+
+  # -- This is for setting up the gitlab. More information about gitlab can be found here: https://docs.gitlab.com/ee/integration/oauth_provider.html
+  gitlab:
+    # -- This is for setting up the gitlab enabled.
+    enabled: false
+    # -- This is for setting up the gitlab client id.
+    clientId: ""
+    # -- This is for setting up the gitlab client secret.
+    clientSecret: ""
+    # -- This is for setting up the gitlab base url.
+    baseUrl: ""
+    # -- This is for setting up the gitlab username claim.
+    usernameClaim: preferred_username
+    # -- This is for setting up the gitlab display name.
+    displayName: "GitLab Connect"
+    # -- This is for setting up the gitlab scopes.
+    scopes:
+      - openid
+      - profile
+      - email
+
+  # -- This is for setting up the discord. More information about discord can be found here: https://docs.getoutline.com/s/hosting/doc/discord-g4JdWFFub6
+  discord:
+    # -- This is for setting up the discord enabled.
+    enabled: false
+    # -- This is for setting up the discord client id.
+    clientId: ""
+    # -- This is for setting up the discord client secret.
+    clientSecret: ""
+    # -- This is for setting up the discord server id.
+    serverId: ""
+    # -- This is for setting up the discord server roles.
+    serverRoles: []
+
+  # -- This is for setting up the auth0. More information about auth0 can be found here: https://auth0.com/docs/get-started/applications/configure-applications-with-oidc-discovery
+  auth0:
+    # -- This is for setting up the auth0 enabled.
+    enabled: false
+    # -- This is for setting up the auth0 client id.
+    clientId: ""
+    # -- This is for setting up the auth0 client secret.
+    clientSecret: ""
+    # -- This is for setting up the auth0 base url.
+    baseUrl: ""
+    # -- This is for setting up the auth0 username claim.
+    usernameClaim: name
+    # -- This is for setting up the auth0 display name.
+    displayName: "Auth0 Connect"
+    # -- This is for setting up the auth0 scopes.
+    scopes:
+      - openid
+      - profile
+      - email
+
+  # -- This is for setting up the keycloak. More details about the Keycloak OIDC implementation can be found here: https://www.keycloak.org/securing-apps/oidc-layers
+  keycloak:
+    # -- This is for setting up the keycloak enabled.
+    enabled: false
+    # -- This is for setting up the keycloak client id.
+    clientId: ""
+    # -- This is for setting up the keycloak client secret.
+    clientSecret: ""
+    # -- This is for setting up the keycloak base url.
+    baseUrl: ""
+    # -- This is for setting up the keycloak realm name.
+    realmName: ""
+    # -- This is for setting up the keycloak username claim.
+    usernameClaim: preferred_username
+    # -- This is for setting up the keycloak display name.
+    displayName: "Keycloak Connect"
+    # -- This is for setting up the keycloak scopes.
+    scopes:
+      - openid
+      - profile
+      - email
+
+  # -- This is for setting up the saml. More information about saml can be found here: https://docs.getoutline.com/s/hosting/doc/saml-hCmJIfmAjt
+  saml:
+    # -- This is for setting up the saml enabled.
+    enabled: false
+    # -- This is for setting up the saml sso endpoint.
+    ssoEndpoint: ""
+    # -- This is for setting up the saml cert.
+    cert: ""
+
+# -- This is for setting up the integrations. More information about integrations can be found here: https://docs.getoutline.com/s/hosting/doc/integrations-Oav5MXNDJk
+integrations:
+
+  # -- This is for setting up the iframely. More information about iframely can be found here: https://docs.getoutline.com/s/hosting/doc/iframely-HwLF1EZ9mo
+  iframely:
+    # -- This is for setting up the iframely enabled.
+    enabled: false
+    # -- This is for setting up the iframely url.
+    url: ""
+    # -- This is for setting up the iframely api key.
+    apiKey: ""
+
+  # -- This is for setting up the openai. More information about openai can be found here: https://docs.getoutline.com/s/hosting/doc/openai-iiTYCN9Nct
+  openAI:
+    # -- This is for setting up the openai enabled.
+    enabled: false
+    # -- This is for setting up the openai url.
+    url: ""
+    # -- This is for setting up the openai api key.
+    apiKey: ""
+    # -- This is for setting up the openai vector database url.
+    vectorDatabaseUrl: ""
+
+  # -- This is for setting up the pdf export. More information about pdf export can be found here: https://docs.getoutline.com/s/hosting/doc/pdf-export-7Dn1hCyUo5
+  pdfExport:
+    # -- This is for setting up the pdf export enabled.
+    enabled: false
+    # -- This is for setting up the pdf export gotenberg url.
+    gotenbergUrl: ""
+
+  # -- This is for setting up the sentry. More information about sentry can be found here: https://docs.getoutline.com/s/hosting/doc/sentry-jxcFttcDl5
+  sentry:
+    # -- This is for setting up the sentry enabled.
+    enabled: false
+    # -- This is for setting up the sentry dsn.
+    dsn: ""
+    # -- This is for setting up the sentry tunnel.
+    tunnel: ""
+
+  # -- This is for setting up the slack. More information about slack can be found here: https://docs.getoutline.com/s/hosting/doc/slack-G2mc8DOJHk
+  slack:
+    # -- This is for setting up the slack enabled.
+    enabled: false
+    # -- This is for setting up the slack verification token.
+    verificationToken: ""
+    # -- This is for setting up the slack app id.
+    appId: ""
+    # -- This is for setting up the slack message actions.
+    messageActions: true
+
+  # -- This is for setting up the dropbox.
+  dropbox:
+    # -- This is for setting up the dropbox enabled.
+    enabled: false
+    # -- This is for setting up the dropbox app key.
+    appKey: ""
+
+# -- This is for setting up the smtp. More information about smtp can be found here: https://docs.getoutline.com/s/hosting/doc/smtp-cqCJyZGMIB
+smtp:
+  # -- This is for setting up the smtp host.
+  host: ""
+  # -- This is for setting up the smtp port.
+  port: 587
+  # -- This is for setting up the smtp username.
+  username: ""
+  # -- This is for setting up the smtp password.
+  password: ""
+  # -- This is for setting up the smtp from email.
+  fromEmail: ""
+  # -- This is for setting up the smtp reply email.
+  replyEmail: ""
+  # -- This is for setting up the smtp tls ciphers.
+  tlsCiphers: ""
+  # -- This is for setting up the smtp secure.
+  secure: true
+
+# -- This is for setting up the extra environment variables.
+extraEnvVars: {}
+  # ENV_VARIABLE_NAME: value
+
+# -- This is for setting up the extra secrets for environment variables.
+extraSecretNamesForEnvFrom: []
+  # - my-smtp-secret
+
+# -- This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
+ingress:
+  # -- This is for setting up the ingress enabled.
+  enabled: false
+  # -- This is for setting up the ingress class name.
+  className: ""
+  # -- This is for setting up the ingress annotations.
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  # -- This is for setting up the ingress hosts.
+  hosts:
+    - host: outline.mydomain.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  # -- This is for setting up the ingress tls.
+  tls: []
+  #  - secretName: outline-tls
+  #    hosts:
+  #      - outline.mydomain.com
+
+# -- This is to setup the resources more information can be found here: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+# -- This is to setup the liveness probe more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  # -- This is for setting up the http get.
+  httpGet:
+    # -- This is for setting up the path.
+    path: /_health
+    # -- This is for setting up the port.
+    port: http
+  # -- This is for setting up the initial delay seconds.
+  initialDelaySeconds: 10
+  # -- This is for setting up the period seconds.
+  periodSeconds: 30
+  # -- This is for setting up the timeout seconds.
+  timeoutSeconds: 3
+  # -- This is for setting up the failure threshold.
+  failureThreshold: 5
+
+# -- This is to setup the readiness probe more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+readinessProbe:
+  # -- This is for setting up the http get.
+  httpGet:
+    # -- This is for setting up the path.
+    path: /_health
+    # -- This is for setting up the port.
+    port: http
+  # -- This is for setting up the initial delay seconds.
+  initialDelaySeconds: 10
+  # -- This is for setting up the period seconds.
+  periodSeconds: 30
+  # -- This is for setting up the timeout seconds.
+  timeoutSeconds: 3
+  # -- This is for setting up the failure threshold.
+  failureThreshold: 5
+
+# -- This is for setting up the db health check.
+dbHealthCheck:
+  # -- This is for setting up the db health check enabled.
+  enabled: true
+
+# -- Additional init containers on the output Deployment definition.
+initContainers: []
+
+# -- Additional containers (sidecars) on the output Deployment definition.
+extraContainers: []
+
+# -- Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+# -- For more information checkout: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector
+nodeSelector: {}
+
+# -- For more information checkout: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+tolerations: []
+
+# -- For more information checkout: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#affinity-and-anti-affinity
+affinity: {}
+
+# -- Bitnami Redis configuration
+redis:
+  # -- Enable redis
+  enabled: false
+  architecture: standalone
+
+  master:
+    service:
+      ports:
+        redis: 6379
+
+    persistence:
+      enabled: false
+
+# -- External Redis parameters
+externalRedis:
+  # -- External Redis server host
+  host: ""
+  # -- External Redis username
+  username: ""
+  # -- External Redis password
+  password: ""
+  # -- External Redis server port
+  port: 6379
+  # -- The name of an existing secret with Redis (must contain key `redis-password`) and Sentinel credentials.
+  # When it's set, the `externalRedis.password` parameter is ignored
+  existingSecret: ""
+
+# -- Database configuration
+database:
+  # -- The minimum number of connections in the connection pool.
+  connectionPoolMin: ""
+  # -- The maximum number of connections in the connection pool.
+  connectionPoolMax: "20"
+  # -- The SSL mode to use for the database connection. possible values are: "disable", "allow", "require", "prefer", "verify-ca", "verify-full" 
+  sslMode: disable
+
+# -- Bitnami PostgreSQL configuration
+postgresql:
+  # -- Enable postgresql
+  enabled: false
+  # -- Enable postgresql architecture.
+  architecture: standalone
+
+  # -- This is for setting up the primary service.
+  primary:
+    # -- This is for setting up the primary service.
+    service:
+      # -- This is for setting up the service ports.
+      ports:
+        # -- This is for setting up the postgresql port.
+        postgresql: 5432
+
+    # -- This is for setting up the persistence.
+    persistence:
+      # -- This is for setting up the persistence enabled.
+      enabled: true
+      # -- This is for setting up the persistence existing claim.
+      existingClaim: ""
+
+  # -- This is for setting up the auth.
+  auth:
+    # -- This is for setting up the auth username.
+    username: ""
+    # -- This is for setting up the auth password.
+    password: ""
+    # -- This is for setting up the auth database.
+    database: outline
+
+# -- External PostgreSQL parameters
+externalPostgresql:
+  # -- External PostgreSQL server host
+  host: ""
+  # -- External PostgreSQL username
+  username: "postgres"
+  # -- External PostgreSQL password
+  password: ""
+  # -- External PostgreSQL server port
+  port: 5432
+  # -- The name of the external PostgreSQL database. For more information: https://docs.getoutline.com/s/hosting/doc/docker-7pfeLP5a8t
+  database: outline
+  # -- The name of an existing secret with PostgreSQL (must contain key `postgres-password`) and credentials.
+  # When it's set, the `externalPostgresql.password` parameter is ignored
+  existingSecret: ""
+
+# -- Minio configuration
+minio:
+  # -- Enable minio
+  enabled: false
+
+  # -- Minio mode
+  mode: standalone
+
+  # -- Minio deployment update strategy
+  deploymentUpdate:
+    type: Recreate
+
+  # -- Minio statefulset update strategy
+  statefulSetUpdate:
+    updateStrategy: Recreate
+
+  # -- Number of drives attached to a node
+  drivesPerNode: 1
+
+  # -- Number of MinIO containers running
+  replicas: 1
+
+  # -- Number of expanded MinIO clusters
+  pools: 1
+
+  # -- Minio root user. Length should be at least 3 characters.
+  rootUser: ""
+  # -- Minio root password. Length should be at least 8 characters.
+  rootPassword: ""
+
+  # -- Minio resources
+  resources:
+    # -- Minio requests
+    requests:
+      # -- Minio requests memory
+      memory: 1Gi
+
+  # -- Minio persistence
+  persistence:
+    # -- Enable persistence
+    enabled: true
+
+    # -- Minio persistence annotations
+    annotations: {}
+
+    # -- Minio persistence existing claim
+    existingClaim: ""
+
+    # -- Minio persistence storage class
+    storageClass: ""
+
+    # -- Minio persistence volume name
+    volumeName: ""
+
+    # -- Minio persistence access mode
+    accessMode: ReadWriteOnce
+
+    # -- Minio persistence size
+    size: 40Gi
+
+    # -- Minio persistence sub path
+    subPath: ""
+
+  # -- Minio ingress. Outline will use this ingress to access Minio. It's required when fileStorage.mode is s3.
+  ingress:
+    # -- Enable ingress
+    enabled: true
+    # -- Ingress hosts
+    hosts:
+      - minio.mydomain.com
+    # -- Ingress path
+    path: /
+
+  # -- Minio console ingress
+  consoleIngress:
+    # -- Enable ingress
+    enabled: false
+    # -- Ingress hosts
+    hosts:
+      - minio-console.mydomain.com
+    # -- Ingress path
+    path: /
+
+  # -- Minio policies
+  policies:
+    # -- Outline policy
+    - name: outline-policy
+      statements:
+        # -- Outline policy statements
+        - actions:
+            - "s3:AbortMultipartUpload"
+            - "s3:GetObject"
+            - "s3:DeleteObject"
+            - "s3:PutObject"
+            - "s3:ListMultipartUploadParts"
+          resources: 
+            - "arn:aws:s3:::outline/*"
+        - actions:
+            - "s3:GetBucketLocation"
+            - "s3:ListBucket"
+            - "s3:ListBucketMultipartUploads"
+          resources: 
+            - "arn:aws:s3:::outline"
+
+  # -- Minio users
+  users:
+    # -- Outline user
+    - accessKey: outline
+      # -- Outline user secret key
+      secretKey: Change_Me
+      # -- Outline user policy
+      policy: outline-policy
+
+  # -- Minio buckets
+  buckets:
+    # -- Outline bucket
+    - name: outline
+      # -- Policy to be set on the
+      # bucket [none|download|upload|public]
+      policy: none
+      # Purge if bucket exists already
+      purge: false
+      # set versioning for
+      # bucket [true|false]
+      versioning: false

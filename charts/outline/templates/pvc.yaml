@@ -1,0 +1,31 @@
+{{- if and (eq .Values.fileStorage.mode "local") .Values.fileStorage.local.persistence.enabled (not .Values.fileStorage.local.persistence.existingClaim) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  {{- with .Values.fileStorage.local.persistence.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "outline.labels" . | nindent 4 }}
+  name: {{ template "outline.fullname" . }}-data
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- with .Values.fileStorage.local.persistence.accessModes }}
+  accessModes:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.fileStorage.local.persistence.storageClass }}
+    {{- if (eq "-" .) }}
+  storageClassName: ""
+    {{- else }}
+  storageClassName: {{ . | quote }}
+    {{- end }}
+  {{- end }}
+  {{- with .Values.fileStorage.local.persistence.volumeMode }}
+  volumeMode: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.fileStorage.local.persistence.size | quote }}
+{{- end }}

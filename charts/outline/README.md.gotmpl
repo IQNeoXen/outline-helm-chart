@@ -1,0 +1,383 @@
+{{ template "chart.header" . }}
+
+![outline](https://avatars.githubusercontent.com/u/1765001?s=200&v=4)
+
+{{ template "chart.description" . }}
+
+{{ template "chart.versionBadge" . }}{{ template "chart.typeBadge" . }}{{ template "chart.appVersionBadge" . }}
+
+## Get Helm Repository Info
+
+```console
+helm repo add community-charts https://community-charts.github.io/helm-charts
+helm repo update
+```
+
+_See [`helm repo`](https://helm.sh/docs/helm/helm_repo/) for command documentation._
+
+## Installing the Chart
+
+```console
+helm install [RELEASE_NAME] community-charts/{{ template "chart.name" . }}
+```
+
+_See [configuration](#configuration) below._
+
+_See [helm install](https://helm.sh/docs/helm/helm_install/) for command documentation._
+
+> **Tip**: Search all available chart versions using `helm search repo community-charts -l`. Please don't forget to run `helm repo update` before the command.
+
+## Authentication Methods
+
+Outline supports multiple authentication methods. Here are examples for each:
+
+### Google Auth
+
+This is for setting up the Google authentication. More information about google can be found here: https://docs.getoutline.com/s/hosting/doc/google-hOuvtCmTqQ
+
+```yaml
+auth:
+  google:
+    enabled: true
+    clientId: "your-client-id"
+    clientSecret: "your-client-secret"
+```
+
+### Azure Auth
+
+This is for setting up the Azure authentication. More information about azure can be found here: https://docs.getoutline.com/s/hosting/doc/microsoft-entra-UVz6jsIOcv
+
+```yaml
+auth:
+  azure:
+    enabled: true
+    clientId: "your-client-id"
+    clientSecret: "your-client-secret"
+    resourceAppId: "optional-resource-app-id"  # Optional
+    tenantId: "optional-tenant-id"  # Optional
+```
+
+### OIDC Auth
+
+This is for setting up the OIDC authentication. More information about oidc can be found here: https://docs.getoutline.com/s/hosting/doc/oidc-8CPBm6uC0I
+
+```yaml
+auth:
+  oidc:
+    enabled: true
+    clientId: "your-client-id"
+    clientSecret: "your-client-secret"
+    authUri: "https://your-auth-server/auth"
+    tokenUri: "https://your-auth-server/token"
+    userInfoUri: "https://your-auth-server/userinfo"
+    usernameClaim: "preferred_username"
+    displayName: "OpenID Connect"
+    scopes:
+      - openid
+      - profile
+      - email
+```
+
+### Slack Auth
+
+This is for setting up the Slack authentication. More information about slack can be found here: https://docs.getoutline.com/s/hosting/doc/slack-sgMujR8J9J
+
+```yaml
+auth:
+  slack:
+    enabled: true
+    clientId: "your-client-id"
+    clientSecret: "your-client-secret"
+```
+
+### GitHub Auth
+
+This is for setting up the GitHub authentication. More information about github can be found here: https://docs.getoutline.com/s/hosting/doc/github-GchT3NNxI9
+
+```yaml
+auth:
+  github:
+    enabled: true
+    clientId: "your-client-id"
+    clientSecret: "your-client-secret"
+    appName: "your-app-name"  # Optional
+    appId: "your-app-id"  # Optional
+    appPrivateKey: "your-private-key"  # Optional
+```
+
+### GitLab Auth
+
+This is for setting up the GitLab authentication. More information about gitlab can be found here: https://docs.gitlab.com/ee/integration/oauth_provider.html
+
+```yaml
+auth:
+  gitlab:
+    enabled: true
+    clientId: "your-client-id"
+    clientSecret: "your-client-secret"
+    baseUrl: "https://gitlab.com"  # Optional, for self-hosted instances
+```
+
+### Gitea Auth
+
+This is for setting up the Gitea authentication. More information about gitea can be found here: https://docs.gitea.com/development/oauth2-provider#endpoints
+
+```yaml
+auth:
+  gitea:
+    enabled: true
+    clientId: "your-client-id"
+    clientSecret: "your-client-secret"
+    baseUrl: "https://gitea.com"  # Optional, for self-hosted instances
+```
+
+### Keycloak Auth
+
+This is for setting up the Keycloak authentication. More information about keycloak can be found here: https://www.keycloak.org/docs/latest/server_admin/index.html#_oauth2-service-provider-configuration
+
+```yaml
+auth:
+  keycloak:
+    enabled: true
+    clientId: "your-client-id"
+    clientSecret: "your-client-secret"
+    realm: "your-realm"
+```
+
+### Discord Auth
+
+This is for setting up the Discord authentication. More information about discord can be found here: https://docs.getoutline.com/s/hosting/doc/discord-g4JdWFFub6
+
+```yaml
+auth:
+  discord:
+    enabled: true
+    clientId: "your-client-id"
+    clientSecret: "your-client-secret"
+    serverId: "your-server-id"
+    serverRoles: []
+```
+
+### Auth0 Auth
+
+This is for setting up the Auth0 authentication. More information about auth0 can be found here: https://auth0.com/docs/get-started/applications/configure-applications-with-oidc-discovery
+
+```yaml
+auth:
+  auth0:
+    enabled: true
+    clientId: "your-client-id"
+    clientSecret: "your-client-secret"
+    baseUrl: "https://your-auth0-server"
+```
+
+## Storage Configuration
+
+### Local File Storage
+
+```yaml
+fileStorage:
+  mode: local
+  local:
+    rootDir: /var/lib/outline/data
+    persistence:
+      enabled: true
+      size: 8Gi
+```
+
+### S3 Compatible Storage
+
+```yaml
+fileStorage:
+  mode: s3
+
+  s3:
+    bucket: outline
+    region: us-east-1
+    baseUrl: "https://your-s3-compatible-endpoint"
+    accessKeyId: "your-access-key"
+    secretAccessKey: "your-secret-key"
+    forcePathStyle: true
+    acl: private
+```
+
+### Using MinIO
+
+```yaml
+fileStorage:
+  mode: s3
+
+minio:
+  enabled: true
+  rootUser: admin
+  rootPassword: strongpassword
+
+  persistence:
+    enabled: true
+    size: 40Gi
+```
+
+## Database Configuration
+
+### Using Built-in PostgreSQL
+
+```yaml
+postgresql:
+  enabled: true
+
+  auth:
+    username: outline
+    password: strongpassword
+    database: outline
+
+  primary:
+    persistence:
+      enabled: true
+```
+
+### Using External PostgreSQL
+
+```yaml
+postgresql:
+  enabled: false
+
+externalPostgresql:
+  host: "your-postgresql-host"
+  port: 5432
+  database: outline
+  username: outline
+  password: strongpassword
+  # Or use existing secret:
+  existingSecret: "your-secret-name"
+```
+
+## Redis Configuration
+
+### Using Built-in Redis
+
+```yaml
+redis:
+  enabled: true
+  architecture: standalone
+  master:
+    persistence:
+      enabled: true
+```
+
+### Using External Redis
+
+```yaml
+redis:
+  enabled: false
+
+externalRedis:
+  host: "your-redis-host"
+  port: 6379
+  username: "default"
+  password: "your-password"
+  # Or use existing secret:
+  existingSecret: "your-secret-name"
+```
+
+## SMTP Configuration
+
+```yaml
+smtp:
+  host: "smtp.example.com"
+  port: 587
+  username: "your-username"
+  password: "your-password"
+  fromEmail: "outline@example.com"
+  replyEmail: "no-reply@example.com"
+  secure: true
+```
+
+## Ingress Configuration
+
+```yaml
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+
+  hosts:
+    - host: outline.example.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+
+  tls:
+    - secretName: outline-tls
+      hosts:
+        - outline.example.com
+```
+
+## Resource Management
+
+```yaml
+resources:
+  requests:
+    cpu: 1000m
+    memory: 512Mi
+  limits:
+    cpu: 2000m
+    memory: 2Gi
+```
+
+## Health Checks
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /_health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 3
+  failureThreshold: 5
+
+readinessProbe:
+  httpGet:
+    path: /_health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 3
+  failureThreshold: 5
+```
+
+{{ template "chart.requirementsSection" . }}
+
+## Uninstall Helm Chart
+
+```console
+helm uninstall [RELEASE_NAME]
+```
+
+This removes all the Kubernetes components associated with the chart and deletes the release.
+
+_See [helm uninstall](https://helm.sh/docs/helm/helm_uninstall/) for command documentation._
+
+## Upgrading Chart
+
+```console
+helm upgrade [RELEASE_NAME] community-charts/{{ template "chart.name" . }}
+```
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+## Chart Development
+
+Please install unittest helm plugin with `helm plugin install https://github.com/helm-unittest/helm-unittest.git` command and use following command to run helm unit tests.
+
+```console
+helm unittest --strict --file 'unittests/**/*.yaml' charts/{{ template "chart.name" . }}
+```
+
+{{ template "chart.maintainersSection" . }}

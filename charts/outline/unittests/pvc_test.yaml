@@ -1,0 +1,107 @@
+suite: test persistent volume claim
+
+templates:
+  - pvc.yaml
+
+tests:
+  - it: should not create pvc when fileStorage.mode is not local
+    set:
+      fileStorage:
+        mode: s3
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not create pvc when persistance is not enabled
+    set:
+      fileStorage:
+        mode: local
+        local:
+          persistence:
+            enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should not create pvc when existingClaim is set
+    set:
+      fileStorage:
+        local:
+          persistence:
+            existingClaim: fake-existing-claim
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should set annotations when file storage mode is local and persistance is enabled and existing claim is not set and annotations are set
+    set:
+      fileStorage:
+        mode: local
+        local:
+          persistence:
+            enabled: true
+            existingClaim: ""
+            annotations:
+              key: value
+    asserts:
+      - equal:
+          path: metadata.annotations.key
+          value: value
+
+  - it: should set access modes when file storage mode is local and persistance is enabled and existing claim is not set and access modes are set
+    set:
+      fileStorage:
+        mode: local
+        local:
+          persistence:
+            enabled: true
+            existingClaim: ""
+            accessModes:
+              - ReadWriteOnce
+    asserts:
+      - contains:
+          path: spec.accessModes
+          content:
+            ReadWriteOnce
+
+  - it: should set storage class when file storage mode is local and persistance is enabled and existing claim is not set and storage class is set
+    set:
+      fileStorage:
+        mode: local
+        local:
+          persistence:
+            enabled: true
+            existingClaim: ""
+            storageClass: fake-storage-class
+    asserts:
+      - equal:
+          path: spec.storageClassName
+          value: fake-storage-class
+
+  - it: should set volume mode when file storage mode is local and persistance is enabled and existing claim is not set and volume mode is set
+    set:
+      fileStorage:
+        mode: local
+        local:
+          persistence:
+            enabled: true
+            existingClaim: ""
+            volumeMode: Block
+    asserts:
+      - equal:
+          path: spec.volumeMode
+          value: Block
+
+  - it: should set size when file storage mode is local and persistance is enabled and existing claim is not set and size is set
+    set:
+      fileStorage:
+        mode: local
+        local:
+          persistence:
+            enabled: true
+            existingClaim: ""
+            size: 10Gi
+    asserts:
+      - equal:
+          path: spec.resources.requests.storage
+          value: 10Gi

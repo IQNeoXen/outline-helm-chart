@@ -1,0 +1,1049 @@
+suite: test deployment
+
+templates:
+  - deployment.yaml
+
+set:
+  externalPostgresql:
+    host: fake-postgresql-service
+  externalRedis:
+    host: fake-redis-service
+
+release:
+  name: outline
+  namespace: outline
+
+chart:
+  version: 1.0.0
+  appVersion: 1.0.0
+
+tests:
+  - it: should set replica count when replicaCount is set
+    set:
+      replicaCount: 2
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 2
+
+  - it: should be custom service account when we do not create it
+    set:
+      serviceAccount:
+        create: false
+        name: customsa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: customsa
+
+  - it: should set strategy to Recreate when strategy.type is Recreate
+    set:
+      strategy:
+        type: Recreate
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: Recreate
+
+  - it: should set strategy to RollingUpdate when strategy.type is RollingUpdate
+    set:
+      strategy:
+        type: RollingUpdate
+        rollingUpdate:
+          maxUnavailable: 1
+          maxSurge: 1
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: RollingUpdate
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 1
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 1
+
+  - it: should set pod annotations when podAnnotations are set
+    set:
+      podAnnotations:
+        test: test
+    asserts:
+      - equal:
+          path: spec.template.metadata.annotations.test
+          value: test
+
+  - it: should set image pull secrets when imagePullSecrets are set
+    set:
+      imagePullSecrets:
+        - name: fake-image-pull-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: fake-image-pull-secret
+
+  - it: should set pod security context when podSecurityContext is set
+    set:
+      podSecurityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 1000
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+
+  - it: should have db-healthcheck init container when db-healthcheck is enabled
+    set:
+      dbHealthCheck:
+        enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: db-healthcheck
+
+  - it: should not have init containers when db-healthcheck is disabled
+    set:
+      dbHealthCheck:
+        enabled: false
+    asserts:
+      - notContains:
+          path: spec.template.spec.initContainers
+          content: db-healthcheck
+
+  - it: should have additional init containers when initContainers are set
+    set:
+      dbHealthCheck:
+        enabled: false
+      initContainers:
+        - name: fake-init-container
+          image: fake-image
+          command: ["fake-command"]
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: fake-init-container
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: fake-image
+
+  - it: should set init script from volume mounts when dbHealthCheck is enabled
+    set:
+      dbHealthCheck:
+        enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name == "db-healthcheck")].volumeMounts[0].name
+          value: init-script
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name == "db-healthcheck")].volumeMounts[0].mountPath
+          value: /scripts
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name == "db-healthcheck")].volumeMounts[0].subPath
+          value: healthcheck.js
+      - equal:
+          path: spec.template.spec.initContainers[?(@.name == "db-healthcheck")].volumeMounts[0].readOnly
+          value: true
+
+  - it: should set container security context when securityContext is set
+    set:
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].securityContext.runAsUser
+          value: 1000
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].securityContext.runAsGroup
+          value: 1000
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].securityContext.runAsNonRoot
+          value: true
+
+  - it: should use image repository and tag from image when they set
+    set:
+      image:
+        repository: fake-image-repository/fake-image
+        tag: fake-tag
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].image
+          value: fake-image-repository/fake-image:fake-tag
+
+  - it: should use default image and chart app version as image tag when tag is not set
+    set:
+      image:
+        tag: ""
+    release:
+      name: outline
+      namespace: outline
+    chart:
+      version: 1.0.0
+      appVersion: 0.81.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].image
+          value: outlinewiki/outline:0.81.0
+
+  - it: should set image pull policy when imagePullPolicy is set
+    set:
+      image.pullPolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].imagePullPolicy
+          value: Always
+
+  - it: should set ports when service.port is set
+    set:
+      service:
+        port: 8080
+        name: fake-port
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].ports[0].name
+          value: fake-port
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].ports[0].containerPort
+          value: 8080
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].ports[0].protocol
+          value: TCP
+
+  - it: should set liveness probe when livenessProbe is set
+    set:
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: http
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 3
+        successThreshold: 1
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].livenessProbe.httpGet.path
+          value: /health
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].livenessProbe.httpGet.port
+          value: http
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].livenessProbe.initialDelaySeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].livenessProbe.periodSeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].livenessProbe.timeoutSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].livenessProbe.failureThreshold
+          value: 3
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].livenessProbe.successThreshold
+          value: 1
+
+  - it: should set readiness probe when readinessProbe is set
+    set:
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: http
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 3
+        successThreshold: 1
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].readinessProbe.httpGet.path
+          value: /health
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].readinessProbe.httpGet.port
+          value: http
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].readinessProbe.initialDelaySeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].readinessProbe.periodSeconds
+          value: 10
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].readinessProbe.timeoutSeconds
+          value: 5
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].readinessProbe.failureThreshold
+          value: 3
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].readinessProbe.successThreshold
+          value: 1
+
+  - it: should set resources when resources are set
+    set:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 100Mi
+        limits:
+          cpu: 200m
+          memory: 200Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].resources.requests.cpu
+          value: 100m
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].resources.requests.memory
+          value: 100Mi
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].resources.limits.cpu
+          value: 200m
+      - equal:
+          path: spec.template.spec.containers[?(@.name == "outline")].resources.limits.memory
+          value: 200Mi
+
+  - it: should set required environment variables
+    set:
+      service:
+        port: 5000
+      defaultLanguage: de_DE
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: NODE_ENV
+            value: production
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: SECRET_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secret-key
+                name: outline-auto-generated-secret
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: UTILS_SECRET
+            valueFrom:
+              secretKeyRef:
+                key: utils-secret
+                name: outline-auto-generated-secret
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: PORT
+            value: "5000"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: DEFAULT_LANGUAGE
+            value: de_DE
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: URL
+            value: http://outline:5000
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: RATE_LIMITER_ENABLED
+            value: "false"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: ENABLE_UPDATES
+            value: "false"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: TELEMETRY
+            value: "false"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: FORCE_HTTPS
+            value: "true"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: WEB_CONCURRENCY
+            value: "1"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: LOG_LEVEL
+            value: "info"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: PGUSER
+            value: postgres
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: postgres-password
+                name: outline-postgresql
+                optional: true
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: PGPORT
+            value: "5432"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: PGHOST
+            value: fake-postgresql-service
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: PGDATABASE
+            value: outline
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: DATABASE_CONNECTION_POOL_MIN
+            value: ""
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: DATABASE_CONNECTION_POOL_MAX
+            value: "20"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: PGSSLMODE
+            value: disable
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: REDIS_USERNAME
+            valueFrom:
+              secretKeyRef:
+                key: redis-username
+                name: outline-redis
+                optional: true
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: REDIS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: redis-password
+                name: outline-redis
+                optional: true
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: REDIS_HOST
+            value: fake-redis-service
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: REDIS_PORT
+            value: "6379"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: DATABASE_URL
+            value: "postgres://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: REDIS_URL
+            value: "redis://$(REDIS_USERNAME):$(REDIS_PASSWORD)@$(REDIS_HOST):$(REDIS_PORT)"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: FILE_STORAGE
+            value: "local"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: FILE_STORAGE_UPLOAD_MAX_SIZE
+            value: "262144000"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: FILE_STORAGE_IMPORT_MAX_SIZE
+            value: ""
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: FILE_STORAGE_WORKSPACE_IMPORT_MAX_SIZE
+            value: ""
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: FILE_STORAGE_LOCAL_ROOT_DIR
+            value: "/var/lib/outline/data"
+
+  - it: should set http ingress url when ingress is enabled and tls is not set
+    set:
+      ingress:
+        enabled: true
+        hosts:
+          - host: fake-host.local
+            paths:
+              - path: /
+                pathType: ImplementationSpecific
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: URL
+            value: http://fake-host.local
+
+  - it: should set https ingress url when ingress is enabled and tls is set
+    set:
+      ingress:
+        enabled: true
+        hosts:
+          - host: fake-host.local
+            paths:
+              - path: /
+                pathType: ImplementationSpecific
+        tls:
+          - hosts:
+              - fake-host.local
+            secretName: fake-tls-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: URL
+            value: https://fake-host.local
+
+  - it: should set rate limiter when rateLimiter is enabled
+    set:
+      rateLimiter:
+        enabled: true
+        limit: 100
+        window: 60
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: RATE_LIMITER_ENABLED
+            value: "true"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: RATE_LIMITER_REQUESTS
+            value: "100"
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: RATE_LIMITER_DURATION_WINDOW
+            value: "60"
+
+  - it: should set not force https when web.forceHttps is false
+    set:
+      web:
+        forceHttps: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: FORCE_HTTPS
+            value: "false"
+
+  - it: should skip ssl verification when web.skipSSLVerification is true
+    set:
+      web:
+        skipSSLVerification: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: NODE_TLS_REJECT_UNAUTHORIZED
+            value: "0"
+
+  - it: should set comma separated debug logs when logging.extraDebug is set
+    set:
+      logging:
+        extraDebug:
+          - lifecycle
+          - http
+          - editor
+          - router
+          - collaboration
+          - misc
+          - store
+          - plugins
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: DEBUG
+            value: "lifecycle,http,editor,router,collaboration,misc,store,plugins"
+
+  - it: should use password key when postgresql.auth.username is set and when postgresql.enabled
+    set:
+      postgresql:
+        enabled: true
+        auth:
+          username: fake-username
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: outline-postgresql
+                optional: true
+
+  - it: should set postgresql password from existing secret when postgresql.enabled is false and externalPostgresql.existingSecret is set
+    set:
+      postgresql:
+        enabled: false
+      externalPostgresql:
+        existingSecret: fake-existing-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: PGPASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: postgres-password
+                name: fake-existing-secret
+                optional: true
+
+  - it: should set postgresql host by release name when postgresql.enabled is true
+    set:
+      postgresql:
+        enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: PGHOST
+            value: outline-postgresql
+
+  - it: should set postgresql database by postgresql.auth.database when postgresql.enabled is true
+    set:
+      postgresql:
+        enabled: true
+        auth:
+          database: fake-database
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: PGDATABASE
+            value: fake-database
+
+  - it: should set redis username from existing secret when redis is not enabled and externalRedis.existingSecret is set
+    set:
+      redis:
+        enabled: false
+      externalRedis:
+        existingSecret: fake-existing-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: REDIS_USERNAME
+            valueFrom:
+              secretKeyRef:
+                key: redis-username
+                name: fake-existing-secret
+                optional: true
+
+  - it: should set redis username default when redis is enabled and externalRedis.existingSecret is not set
+    set:
+      redis:
+        enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: REDIS_USERNAME
+            value: "default"
+
+  - it: should set file storage directory and volume for it when fileStorage.mode is local and persistence is enabled
+    set:
+      fileStorage:
+        mode: local
+        local:
+          rootDir: /any/path
+          persistence:
+            enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: FILE_STORAGE_LOCAL_ROOT_DIR
+            value: "/any/path"
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            persistentVolumeClaim:
+              claimName: outline-data
+
+  - it: should set file storage directory and volume for it when fileStorage.mode is local and persistence is enabled and existingClaim is set
+    set:
+      fileStorage:
+        mode: local
+        local:
+          rootDir: /another/path
+          persistence:
+            enabled: true
+            existingClaim: fake-existing-claim
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: FILE_STORAGE_LOCAL_ROOT_DIR
+            value: "/another/path"
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            persistentVolumeClaim:
+              claimName: fake-existing-claim
+
+  - it: should set aws access key id from s3 object when fileStorage.mode is s3 and minio is not enabled
+    set:
+      minio:
+        enabled: false
+      fileStorage:
+        mode: s3
+        s3:
+          accessKeyId: fake-access-key-id
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: access-key-id
+                name: outline-s3-secret
+
+  - it: should set aws access key from rootUser key when file storage mode is s3 and minio is enabled and users are not set
+    set:
+      fileStorage:
+        mode: s3
+      minio:
+        enabled: true
+        users: []
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: rootUser
+                name: outline-minio
+
+  - it: should set aws access key from existing secret when file storage mode is s3 and minio is not enabled
+    set:
+      fileStorage:
+        mode: s3
+        s3:
+          existingSecret: fake-existing-secret
+      minio:
+        enabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_ACCESS_KEY_ID
+            valueFrom:
+              secretKeyRef:
+                key: access-key-id
+                name: fake-existing-secret
+
+  - it: should set aws secret access key from s3 object when fileStorage.mode is s3 and minio is not enabled
+    set:
+      minio:
+        enabled: false
+      fileStorage:
+        mode: s3
+        s3:
+          secretAccessKey: fake-secret-access-key
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secret-access-key
+                name: outline-s3-secret
+
+  - it: should set aws secret access key from rootPassword key when file storage mode is s3 and minio is enabled and users are not set
+    set:
+      fileStorage:
+        mode: s3
+      minio:
+        enabled: true
+        users: []
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: rootPassword
+                name: outline-minio
+
+  - it: should set aws secret access key from existing secret when file storage mode is s3 and minio is not enabled
+    set:
+      fileStorage:
+        mode: s3
+        s3:
+          existingSecret: fake-existing-secret
+      minio:
+        enabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_SECRET_ACCESS_KEY
+            valueFrom:
+              secretKeyRef:
+                key: secret-access-key
+                name: fake-existing-secret
+
+  - it: should set bucket name from s3 object when file storage mode is s3 and minio is not enabled
+    set:
+      fileStorage:
+        mode: s3
+        s3:
+          bucket: fake-bucket
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_S3_UPLOAD_BUCKET_NAME
+            value: fake-bucket
+
+  - it: should set bucket name from minio bucket when file storage mode is s3 and minio is enabled
+    set:
+      fileStorage:
+        mode: s3
+      minio:
+        enabled: true
+        buckets:
+          - name: fake-bucket
+            policy: none
+            purge: false
+            versioning: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_S3_UPLOAD_BUCKET_NAME
+            value: fake-bucket
+
+  - it: should set bucket name from s3 object when file storage mode is s3 and minio is enabled but buckets are not set
+    set:
+      fileStorage:
+        mode: s3
+        s3:
+          bucket: fake-bucket
+      minio:
+        enabled: true
+        buckets: []
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_S3_UPLOAD_BUCKET_NAME
+            value: fake-bucket
+
+  - it: should set aws region from s3 object when file storage mode is s3
+    set:
+      fileStorage:
+        mode: s3
+        s3:
+          region: eu-central-1
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_REGION
+            value: eu-central-1
+
+  - it: should set s3 bucket upload url from minio ingress when file storage mode is s3 and minio is enabled
+    set:
+      fileStorage:
+        mode: s3
+      minio:
+        enabled: true
+        ingress:
+          hosts:
+            - fake-minio-ingress.minio.local
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_S3_UPLOAD_BUCKET_URL
+            value: http://fake-minio-ingress.minio.local
+
+  - it: should set s3 bucket upload url from s3 object bucket url when file storage mode is s3 and minio is not enabled
+    set:
+      fileStorage:
+        mode: s3
+        s3:
+          bucketUrl: https://fake-bucket-url
+      minio:
+        enabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_S3_UPLOAD_BUCKET_URL
+            value: https://fake-bucket-url
+
+  - it: should set s3 force path style from s3 object when file storage mode is s3
+    set:
+      fileStorage:
+        mode: s3
+        s3:
+          forcePathStyle: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_S3_FORCE_PATH_STYLE
+            value: "true"
+
+  - it: should set s3 acl from s3 object when file storage mode is s3
+    set:
+      fileStorage:
+        mode: s3
+        s3:
+          acl: public-read
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_S3_ACL
+            value: public-read
+
+  - it: should set extra environment variables when extraEnvVars are set
+    set:
+      extraEnvVars:
+        my_key: my_value
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: MY_KEY
+            value: my_value
+
+  - it: should set extra secret names for envFrom when extraSecretNamesForEnvFrom are set
+    set:
+      extraSecretNamesForEnvFrom:
+        - fake-existing-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].envFrom
+          content:
+            secretRef:
+              name: fake-existing-secret
+
+  - it: should set extra volume mounts when volumeMounts are set
+    set:
+      volumeMounts:
+        - name: fake-volume
+          mountPath: /fake/path
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].volumeMounts
+          content:
+            name: fake-volume
+            mountPath: /fake/path
+
+  - it: should set extra containers (sidecars) when extraContainers are set
+    set:
+      extraContainers:
+        - name: fake-container
+          image: fake-image
+          command: ["fake-command"]
+    asserts:
+      - contains:
+          path: spec.template.spec.containers
+          content:
+            name: fake-container
+            image: fake-image
+            command: ["fake-command"]
+
+  - it: should set extra volumes when volumes are set
+    set:
+      volumes:
+        - name: fake-volume
+          persistentVolumeClaim:
+            claimName: fake-existing-claim
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: fake-volume
+            persistentVolumeClaim:
+              claimName: fake-existing-claim
+
+  - it: should set node selector when nodeSelector is set
+    set:
+      nodeSelector:
+        disktype: ssd
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector.disktype
+          value: ssd
+
+  - it: should set affinity when affinity is set
+    set:
+      affinity:
+        nodeAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              preference:
+                matchExpressions:
+                  - key: disktype
+                    operator: In
+                    values:
+                      - ssd
+    asserts:
+      - contains:
+          path: spec.template.spec.affinity.nodeAffinity.preferredDuringSchedulingIgnoredDuringExecution
+          content:
+            weight: 1
+            preference:
+              matchExpressions:
+                - key: disktype
+                  operator: In
+                  values:
+                    - ssd
+
+  - it: should set tolerations when tolerations are set
+    set:
+      tolerations:
+        - key: fake-key
+          operator: fake-operator
+          value: fake-value
+    asserts:
+      - contains:
+          path: spec.template.spec.tolerations
+          content:
+            key: fake-key
+            operator: fake-operator
+            value: fake-value

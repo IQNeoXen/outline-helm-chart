@@ -1,0 +1,386 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "outline.fullname" . }}
+  labels:
+    {{- include "outline.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    type: {{ .Values.strategy.type }}
+    {{- if eq .Values.strategy.type "RollingUpdate" }}
+    rollingUpdate:
+      maxUnavailable: {{ .Values.strategy.rollingUpdate.maxUnavailable }}
+      maxSurge: {{ .Values.strategy.rollingUpdate.maxSurge }}
+    {{- end }}
+  selector:
+    matchLabels:
+      {{- include "outline.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "outline.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "outline.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if or .Values.dbHealthCheck.enabled .Values.initContainers }}
+      initContainers:
+      {{- end }}
+      {{- if .Values.dbHealthCheck.enabled }}
+        - name: db-healthcheck
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          command: ["node", "/scripts/healthcheck.js"]
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: PGSSLMODE
+              value: {{ .Values.database.sslMode | quote }}
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "outline.fullname" . }}-auto-generated-secret
+                  key: secret-key
+            - name: UTILS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "outline.fullname" . }}-auto-generated-secret
+                  key: utils-secret
+            - name: ENABLE_UPDATES
+              value: {{ .Values.autoUpdate.enabled | quote }}
+            - name: TELEMETRY
+              value: {{ .Values.autoUpdate.telemetry | quote }}
+            - name: LOG_LEVEL
+              value: {{ .Values.logging.level | quote }}
+            {{- if .Values.logging.extraDebug }}
+            - name: DEBUG
+              value: {{ .Values.logging.extraDebug | join "," | quote }}
+            {{- end }}
+
+            - name: PGUSER
+              value: {{ include "outline.postgresql.username" . }}
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (include "outline.postgresql.fullname" .) .Values.externalPostgresql.existingSecret }}
+              {{- if .Values.postgresql.auth.username }}
+                  key: password
+              {{- else }}
+                  key: postgres-password
+              {{- end }}
+                  optional: true
+            - name: PGPORT
+              value: {{ (include "outline.postgresql.port" .) | quote }}
+            - name: PGHOST
+              value: {{ (include "outline.postgresql.host" .) | quote }}
+            - name: PGDATABASE
+              value: {{ (include "outline.postgresql.database" .) | quote }}
+
+            - name: REDIS_USERNAME
+            {{- if and .Values.redis.enabled (not .Values.externalRedis.existingSecret) }}
+              value: "default"
+            {{- else }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (include "outline.redis.fullname" .) .Values.externalRedis.existingSecret }}
+                  key: redis-username
+                  optional: true
+            {{- end }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (include "outline.redis.fullname" .) .Values.externalRedis.existingSecret }}
+                  key: redis-password
+                  optional: true
+            - name: REDIS_HOST
+              value: {{ include "outline.redis.host" . }}
+            - name: REDIS_PORT
+              value: {{ (include "outline.redis.port" .) | quote }}
+
+            - name: DATABASE_URL
+              value: "postgres://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+            - name: REDIS_URL
+              value: "redis://$(REDIS_USERNAME):$(REDIS_PASSWORD)@$(REDIS_HOST):$(REDIS_PORT)"
+          envFrom:
+            - secretRef:
+                name: {{ template "outline.fullname" . }}-auth-secret
+          volumeMounts:
+            - name: init-script
+              mountPath: /scripts
+              subPath: healthcheck.js
+              readOnly: true
+      {{- end }}
+      {{- with .Values.initContainers }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          ports:
+            - name: {{ .Values.service.name }}
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            - name: NODE_ENV
+              value: production
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "outline.fullname" . }}-auto-generated-secret
+                  key: secret-key
+            - name: UTILS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ template "outline.fullname" . }}-auto-generated-secret
+                  key: utils-secret
+            - name: PORT
+              value: {{ .Values.service.port | quote }}
+            - name: DEFAULT_LANGUAGE
+              value: {{ .Values.defaultLanguage | quote }}
+            - name: URL
+            {{- if .Values.ingress.enabled }}
+            {{- $schema := ternary "http" "https" (empty .Values.ingress.tls) }}
+              {{- with (first .Values.ingress.hosts) }}
+              value: {{ printf "%s://%s" $schema .host }}
+              {{- end }}
+            {{- else }}
+              # The URL is configured to use the service name and port to ensure proper handling of incoming requests.
+              value: {{ printf "http://%s:%d" (include "outline.fullname" .) (.Values.service.port | int) }}
+            {{- end }}
+            - name: RATE_LIMITER_ENABLED
+              value: {{ printf "%t" .Values.rateLimiter.enabled | quote }}
+            {{- if .Values.rateLimiter.enabled }}
+            - name: RATE_LIMITER_REQUESTS
+              value: {{ .Values.rateLimiter.limit | quote }}
+            - name: RATE_LIMITER_DURATION_WINDOW
+              value: {{ .Values.rateLimiter.window | quote }}
+            {{- end }}
+            - name: ENABLE_UPDATES
+              value: {{ .Values.autoUpdate.enabled | quote }}
+            - name: TELEMETRY
+              value: {{ .Values.autoUpdate.telemetry | quote }}
+            - name: FORCE_HTTPS
+              value: {{ .Values.web.forceHttps | quote }}
+            - name: WEB_CONCURRENCY
+              value: {{ .Values.web.concurrency | quote }}
+
+            {{- if .Values.web.skipSSLVerification }}
+            - name: NODE_TLS_REJECT_UNAUTHORIZED
+              value: "0"
+            {{- end }}
+
+            - name: LOG_LEVEL
+              value: {{ .Values.logging.level | quote }}
+            {{- if .Values.logging.extraDebug }}
+            - name: DEBUG
+              value: {{ .Values.logging.extraDebug | join "," | quote }}
+            {{- end }}
+
+            - name: PGUSER
+              value: {{ include "outline.postgresql.username" . }}
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (include "outline.postgresql.fullname" .) .Values.externalPostgresql.existingSecret }}
+              {{- if and .Values.postgresql.enabled .Values.postgresql.auth.username }}
+                  key: password
+              {{- else }}
+                  key: postgres-password
+              {{- end }}
+                  optional: true
+            - name: PGPORT
+              value: {{ (include "outline.postgresql.port" .) | quote }}
+            - name: PGHOST
+              value: {{ (include "outline.postgresql.host" .) | quote }}
+            - name: PGDATABASE
+              value: {{ (include "outline.postgresql.database" .) | quote }}
+            - name: DATABASE_CONNECTION_POOL_MIN
+              value: {{ .Values.database.connectionPoolMin | quote }}
+            - name: DATABASE_CONNECTION_POOL_MAX
+              value: {{ .Values.database.connectionPoolMax | quote }}
+            - name: PGSSLMODE
+              value: {{ .Values.database.sslMode | quote }}
+
+            - name: REDIS_USERNAME
+            {{- if and .Values.redis.enabled (not .Values.externalRedis.existingSecret) }}
+              value: "default"
+            {{- else }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (include "outline.redis.fullname" .) .Values.externalRedis.existingSecret }}
+                  key: redis-username
+                  optional: true
+            {{- end }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ default (include "outline.redis.fullname" .) .Values.externalRedis.existingSecret }}
+                  key: redis-password
+                  optional: true
+            - name: REDIS_HOST
+              value: {{ include "outline.redis.host" . }}
+            - name: REDIS_PORT
+              value: {{ (include "outline.redis.port" .) | quote }}
+
+            - name: DATABASE_URL
+              value: "postgres://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+            - name: REDIS_URL
+              value: "redis://$(REDIS_USERNAME):$(REDIS_PASSWORD)@$(REDIS_HOST):$(REDIS_PORT)"
+
+            - name: FILE_STORAGE
+              value: {{ .Values.fileStorage.mode | quote }}
+            - name: FILE_STORAGE_UPLOAD_MAX_SIZE
+              value: {{ .Values.fileStorage.uploadMaxSize | quote }}
+            - name: FILE_STORAGE_IMPORT_MAX_SIZE
+              value: {{ .Values.fileStorage.importMaxSize | quote }}
+            - name: FILE_STORAGE_WORKSPACE_IMPORT_MAX_SIZE
+              value: {{ .Values.fileStorage.workspaceImportMaxSize | quote }}
+
+          {{- if eq .Values.fileStorage.mode "local" }}
+            - name: FILE_STORAGE_LOCAL_ROOT_DIR
+              value: {{ .Values.fileStorage.local.rootDir | quote }}
+          {{- end }}
+
+        {{- if eq .Values.fileStorage.mode "s3" }}
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                {{- if and .Values.minio.enabled (eq (len .Values.minio.users) 0) }}
+                  name: {{ template "outline.fullname" . }}-minio
+                  key: rootUser
+                {{- else }}
+                  name: {{ default (printf "%s-s3-secret" (include "outline.fullname" .)) .Values.fileStorage.s3.existingSecret }}
+                  key: access-key-id
+                {{- end }}
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                {{- if and .Values.minio.enabled (eq (len .Values.minio.users) 0) }}
+                  name: {{ template "outline.fullname" . }}-minio
+                  key: rootPassword
+                {{- else }}
+                  name: {{ default (printf "%s-s3-secret" (include "outline.fullname" .)) .Values.fileStorage.s3.existingSecret }}
+                  key: secret-access-key
+                {{- end }}
+
+          {{- if and .Values.minio.enabled .Values.minio.buckets }}
+          {{- with (first .Values.minio.buckets) }}
+            - name: AWS_S3_UPLOAD_BUCKET_NAME
+              value: {{ .name | quote }}
+          {{- end}}
+          {{- else }}
+            - name: AWS_S3_UPLOAD_BUCKET_NAME
+              value: {{ .Values.fileStorage.s3.bucket | quote }}
+          {{- end }}
+
+            - name: AWS_REGION
+              value: {{ .Values.fileStorage.s3.region | quote }}
+          {{- if .Values.fileStorage.s3.accelerateUrl }}
+            - name: AWS_S3_ACCELERATE_URL
+              value: {{ .Values.fileStorage.s3.accelerateUrl | quote }}
+          {{- end }}
+
+          {{- if .Values.minio.enabled }}
+            {{- with (first .Values.minio.ingress.hosts) }}
+            - name: AWS_S3_UPLOAD_BUCKET_URL
+              value: {{ printf "http://%s" . }}
+            {{- end }}
+          {{- else if .Values.fileStorage.s3.bucketUrl }}
+            - name: AWS_S3_UPLOAD_BUCKET_URL
+              value: {{ .Values.fileStorage.s3.bucketUrl | quote }}
+          {{- end }}
+
+            - name: AWS_S3_FORCE_PATH_STYLE
+              value: {{ .Values.fileStorage.s3.forcePathStyle | quote }}
+            - name: AWS_S3_ACL
+              value: {{ .Values.fileStorage.s3.acl | quote }}
+        {{- end }}
+          {{- range $key, $value := .Values.extraEnvVars }}
+            - name: {{ upper $key }}
+              value: {{ $value | quote }}
+          {{- end }}
+          envFrom:
+            - secretRef:
+                name: {{ template "outline.fullname" . }}-auth-secret
+            - secretRef:
+                name: {{ template "outline.fullname" . }}-smtp-secret
+            - secretRef:
+                name: {{ template "outline.fullname" . }}-integrations-secret
+          {{- range .Values.extraSecretNamesForEnvFrom }}
+            - secretRef:
+                name: {{ . }}
+          {{- end }}
+        {{- if or .Values.volumeMounts (and (eq .Values.fileStorage.mode "local") .Values.fileStorage.local.persistence.enabled) }}
+          volumeMounts:
+          {{- if and (eq .Values.fileStorage.mode "local") .Values.fileStorage.local.persistence.enabled }}
+            - name: data
+              mountPath: {{ .Values.fileStorage.local.rootDir }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- end }}
+      {{- with .Values.extraContainers }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+        - name: init-script
+          configMap:
+            name: {{ template "outline.fullname" . }}-init-script
+        {{- if and (eq .Values.fileStorage.mode "local") .Values.fileStorage.local.persistence.enabled }}
+          {{- if .Values.fileStorage.local.persistence.existingClaim }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.fileStorage.local.persistence.existingClaim }}
+          {{- else }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ template "outline.fullname" . }}-data
+          {{- end }}
+        {{- end }}
+      {{- with .Values.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
