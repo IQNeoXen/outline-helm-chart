@@ -16,7 +16,7 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 0.1.0
+version: 0.1.1
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
@@ -59,7 +59,7 @@ annotations:
       url: https://docs.getoutline.com/s/hosting/
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/changes: |
-    - Add initial version of the chart with outline 0.81.1
+    - Fix broken screenshot url
   artifacthub.io/images: |
     - name: outline
       image: outlinewiki/outline:0.81.1
@@ -75,7 +75,7 @@ annotations:
   artifacthub.io/prerelease: "false"
   artifacthub.io/screenshots: |
     - title: Outline Home Page
-      url: https://outline-production-attachments.s3-accelerate.amazonaws.com/uploads/292079f8-0319-4111-bb5b-315e8ae8f14e/4e8a7188-02af-406f-8db0-368bd1454eee/image%2028.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Content-Sha256=UNSIGNED-PAYLOAD&X-Amz-Credential=AKIA4EOUDTOVUICLPZ4P%2F20250216%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Date=20250216T105301Z&X-Amz-Expires=3600&X-Amz-Signature=6abcea244a9dc8a6113f60021da722c830a56063153d3c70b76ed8dfd05124cb&X-Amz-SignedHeaders=host&x-amz-checksum-mode=ENABLED&x-id=GetObject
+      url: https://user-images.githubusercontent.com/380914/110356468-26374600-7fef-11eb-9f6a-f2cc2c8c6590.png
   artifacthub.io/signKey: |
     fingerprint: 939B1A0ED8AAA8E722ACCDB3B6A012EE8A76426A
     url: https://keybase.io/communitycharts/pgp_keys.asc
