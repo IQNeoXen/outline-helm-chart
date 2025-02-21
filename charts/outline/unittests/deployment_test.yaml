@@ -98,58 +98,6 @@ tests:
           path: spec.template.spec.securityContext.runAsNonRoot
           value: true
 
-  - it: should have db-healthcheck init container when db-healthcheck is enabled
-    set:
-      dbHealthCheck:
-        enabled: true
-    asserts:
-      - equal:
-          path: spec.template.spec.initContainers[0].name
-          value: db-healthcheck
-
-  - it: should not have init containers when db-healthcheck is disabled
-    set:
-      dbHealthCheck:
-        enabled: false
-    asserts:
-      - notContains:
-          path: spec.template.spec.initContainers
-          content: db-healthcheck
-
-  - it: should have additional init containers when initContainers are set
-    set:
-      dbHealthCheck:
-        enabled: false
-      initContainers:
-        - name: fake-init-container
-          image: fake-image
-          command: ["fake-command"]
-    asserts:
-      - equal:
-          path: spec.template.spec.initContainers[0].name
-          value: fake-init-container
-      - equal:
-          path: spec.template.spec.initContainers[0].image
-          value: fake-image
-
-  - it: should set init script from volume mounts when dbHealthCheck is enabled
-    set:
-      dbHealthCheck:
-        enabled: true
-    asserts:
-      - equal:
-          path: spec.template.spec.initContainers[?(@.name == "db-healthcheck")].volumeMounts[0].name
-          value: init-script
-      - equal:
-          path: spec.template.spec.initContainers[?(@.name == "db-healthcheck")].volumeMounts[0].mountPath
-          value: /scripts
-      - equal:
-          path: spec.template.spec.initContainers[?(@.name == "db-healthcheck")].volumeMounts[0].subPath
-          value: healthcheck.js
-      - equal:
-          path: spec.template.spec.initContainers[?(@.name == "db-healthcheck")].volumeMounts[0].readOnly
-          value: true
-
   - it: should set container security context when securityContext is set
     set:
       securityContext:
@@ -456,11 +404,6 @@ tests:
           content:
             name: DATABASE_URL
             value: "postgres://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
-      - contains:
-          path: spec.template.spec.containers[?(@.name == "outline")].env
-          content:
-            name: REDIS_URL
-            value: "redis://$(REDIS_USERNAME):$(REDIS_PASSWORD)@$(REDIS_HOST):$(REDIS_PORT)"
       - contains:
           path: spec.template.spec.containers[?(@.name == "outline")].env
           content:
@@ -1047,3 +990,101 @@ tests:
             key: fake-key
             operator: fake-operator
             value: fake-value
+
+  - it: should set entrypoint script from volume mounts when redis is enabled and auth is enabled
+    set:
+      redis:
+        enabled: true
+        auth:
+          enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].volumeMounts
+          content:
+            name: entrypoint-volume
+            mountPath: /entrypoint.sh
+            subPath: entrypoint.sh
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: entrypoint-volume
+            configMap:
+              name: outline-entrypoint
+              defaultMode: 0755
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].command
+          content:
+            /bin/bash
+          any: true
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].command
+          content:
+            /entrypoint.sh
+          any: true
+
+  - it: should set entrypoint script from volume mounts when externalRedis is set
+    set:
+      externalRedis:
+        host: fake-host
+        port: 6379
+        username: fake-username
+        password: fake-password
+      redis:
+        enabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].volumeMounts
+          content:
+            name: entrypoint-volume
+            mountPath: /entrypoint.sh
+            subPath: entrypoint.sh
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: entrypoint-volume
+            configMap:
+              name: outline-entrypoint
+              defaultMode: 0755
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].command
+          content:
+            /bin/bash
+          any: true
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].command
+          content:
+            /entrypoint.sh
+          any: true
+
+  - it: should set entrypoint script from volume mounts when externalRedis is set with existing secret
+    set:
+      externalRedis:
+        host: fake-host
+        port: 6379
+        existingSecret: fake-existing-secret
+      redis:
+        enabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].volumeMounts
+          content:
+            name: entrypoint-volume
+            mountPath: /entrypoint.sh
+            subPath: entrypoint.sh
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: entrypoint-volume
+            configMap:
+              name: outline-entrypoint
+              defaultMode: 0755
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].command
+          content:
+            /bin/bash
+          any: true
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].command
+          content:
+            /entrypoint.sh
+          any: true

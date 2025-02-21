@@ -37,94 +37,8 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or .Values.dbHealthCheck.enabled .Values.initContainers }}
-      initContainers:
-      {{- end }}
-      {{- if .Values.dbHealthCheck.enabled }}
-        - name: db-healthcheck
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
-          command: ["node", "/scripts/healthcheck.js"]
-          env:
-            - name: NODE_ENV
-              value: production
-            - name: PGSSLMODE
-              value: {{ .Values.database.sslMode | quote }}
-            - name: SECRET_KEY
-              valueFrom:
-                secretKeyRef:
-                  name: {{ template "outline.fullname" . }}-auto-generated-secret
-                  key: secret-key
-            - name: UTILS_SECRET
-              valueFrom:
-                secretKeyRef:
-                  name: {{ template "outline.fullname" . }}-auto-generated-secret
-                  key: utils-secret
-            - name: ENABLE_UPDATES
-              value: {{ .Values.autoUpdate.enabled | quote }}
-            - name: TELEMETRY
-              value: {{ .Values.autoUpdate.telemetry | quote }}
-            - name: LOG_LEVEL
-              value: {{ .Values.logging.level | quote }}
-            {{- if .Values.logging.extraDebug }}
-            - name: DEBUG
-              value: {{ .Values.logging.extraDebug | join "," | quote }}
-            {{- end }}
-
-            - name: PGUSER
-              value: {{ include "outline.postgresql.username" . }}
-            - name: PGPASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ default (include "outline.postgresql.fullname" .) .Values.externalPostgresql.existingSecret }}
-              {{- if .Values.postgresql.auth.username }}
-                  key: password
-              {{- else }}
-                  key: postgres-password
-              {{- end }}
-                  optional: true
-            - name: PGPORT
-              value: {{ (include "outline.postgresql.port" .) | quote }}
-            - name: PGHOST
-              value: {{ (include "outline.postgresql.host" .) | quote }}
-            - name: PGDATABASE
-              value: {{ (include "outline.postgresql.database" .) | quote }}
-
-            - name: REDIS_USERNAME
-            {{- if and .Values.redis.enabled (not .Values.externalRedis.existingSecret) }}
-              value: "default"
-            {{- else }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ default (include "outline.redis.fullname" .) .Values.externalRedis.existingSecret }}
-                  key: redis-username
-                  optional: true
-            {{- end }}
-            - name: REDIS_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: {{ default (include "outline.redis.fullname" .) .Values.externalRedis.existingSecret }}
-                  key: redis-password
-                  optional: true
-            - name: REDIS_HOST
-              value: {{ include "outline.redis.host" . }}
-            - name: REDIS_PORT
-              value: {{ (include "outline.redis.port" .) | quote }}
-
-            - name: DATABASE_URL
-              value: "postgres://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
-            - name: REDIS_URL
-              value: "redis://$(REDIS_USERNAME):$(REDIS_PASSWORD)@$(REDIS_HOST):$(REDIS_PORT)"
-          envFrom:
-            - secretRef:
-                name: {{ template "outline.fullname" . }}-auth-secret
-          volumeMounts:
-            - name: init-script
-              mountPath: /scripts
-              subPath: healthcheck.js
-              readOnly: true
-      {{- end }}
       {{- with .Values.initContainers }}
+      initContainers:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
@@ -135,6 +49,9 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent" }}
+          {{- if not (and .Values.redis.enabled (not .Values.redis.auth.enabled)) }}
+          command: ["/bin/bash", "/entrypoint.sh"]
+          {{- end }}
           ports:
             - name: {{ .Values.service.name }}
               containerPort: {{ .Values.service.port }}
@@ -232,6 +149,9 @@ spec:
             - name: PGSSLMODE
               value: {{ .Values.database.sslMode | quote }}
 
+            - name: DATABASE_URL
+              value: "postgres://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+
             - name: REDIS_USERNAME
             {{- if and .Values.redis.enabled (not .Values.externalRedis.existingSecret) }}
               value: "default"
@@ -253,10 +173,10 @@ spec:
             - name: REDIS_PORT
               value: {{ (include "outline.redis.port" .) | quote }}
 
-            - name: DATABASE_URL
-              value: "postgres://$(PGUSER):$(PGPASSWORD)@$(PGHOST):$(PGPORT)/$(PGDATABASE)"
+            {{- if and .Values.redis.enabled (not .Values.redis.auth.enabled) }}
             - name: REDIS_URL
-              value: "redis://$(REDIS_USERNAME):$(REDIS_PASSWORD)@$(REDIS_HOST):$(REDIS_PORT)"
+              value: "redis://$(REDIS_HOST):$(REDIS_PORT)"
+            {{- end }}
 
             - name: FILE_STORAGE
               value: {{ .Values.fileStorage.mode | quote }}
@@ -341,8 +261,10 @@ spec:
             - secretRef:
                 name: {{ . }}
           {{- end }}
-        {{- if or .Values.volumeMounts (and (eq .Values.fileStorage.mode "local") .Values.fileStorage.local.persistence.enabled) }}
           volumeMounts:
+            - name: entrypoint-volume
+              mountPath: /entrypoint.sh
+              subPath: entrypoint.sh
           {{- if and (eq .Values.fileStorage.mode "local") .Values.fileStorage.local.persistence.enabled }}
             - name: data
               mountPath: {{ .Values.fileStorage.local.rootDir }}
@@ -350,14 +272,14 @@ spec:
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-        {{- end }}
       {{- with .Values.extraContainers }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       volumes:
-        - name: init-script
+        - name: entrypoint-volume
           configMap:
-            name: {{ template "outline.fullname" . }}-init-script
+            name: {{ template "outline.fullname" . }}-entrypoint
+            defaultMode: 0755
         {{- if and (eq .Values.fileStorage.mode "local") .Values.fileStorage.local.persistence.enabled }}
           {{- if .Values.fileStorage.local.persistence.existingClaim }}
         - name: data

@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "outline.fullname" . }}-init-script
+  name: {{ template "outline.fullname" . }}-entrypoint
   labels:
     app: {{ include "outline.name" . }}
     chart: {{ include "outline.chart" . }}
     release: {{ .Release.Name }}
     heritage: {{ .Release.Service }}
 data:
-  {{ (.Files.Glob "files/healthcheck.js").AsConfig | nindent 2 }}
+  {{ (.Files.Glob "files/entrypoint.sh").AsConfig | nindent 2 }}

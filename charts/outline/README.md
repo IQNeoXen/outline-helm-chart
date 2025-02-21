@@ -4,7 +4,7 @@
 
 A Helm chart for the fastest knowledge base for growing teams. Beautiful, realtime collaborative, feature packed, and markdown compatible.
 
-![Version: 0.1.2](https://img.shields.io/badge/Version-0.1.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.82.0](https://img.shields.io/badge/AppVersion-0.82.0-informational?style=flat-square)
+![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.82.0](https://img.shields.io/badge/AppVersion-0.82.0-informational?style=flat-square)
 
 ## Get Helm Repository Info
 
@@ -26,6 +26,86 @@ _See [configuration](#configuration) below._
 _See [helm install](https://helm.sh/docs/helm/helm_install/) for command documentation._
 
 > **Tip**: Search all available chart versions using `helm search repo community-charts -l`. Please don't forget to run `helm repo update` before the command.
+
+## Full Example
+
+If you prefer to use self-signed certificate, please install `cert-manager` and `selfsigned-issuer` in your cluster. You can install cert-manager with following command:
+
+```console
+helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.17.0 --set crds.enabled=true
+```
+
+Please find more information about cert-manager [here](https://cert-manager.io/docs/installation/).
+
+And you can create selfsigned-issuer with following command:
+
+```console
+echo "apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned-issuer
+spec:
+  selfSigned: {}" | kubectl apply -f -
+```
+
+Please find more information about selfsigned-issuer [here](https://cert-manager.io/docs/configuration/selfsigned/).
+
+Now you can use the following values.yaml file to install the chart. Please don't forget to import selfsigned certificate to your computer and change trust level of the certificate. Or you can use a valid certificate from your certificate authority.
+
+```yaml
+strategy:
+  type: Recreate
+
+auth:
+  gitea:
+    enabled: true
+    clientId: "123456ab-d789-12ef-g345-f6789ab12cd3"
+    clientSecret: "gto_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+    baseUrl: "https://gitea.example.com"
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: "selfsigned-issuer"
+  hosts:
+    - host: "outline.example.com"
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: "outline-selfsigned-cert-tls"
+      hosts:
+        - "outline.example.com"
+
+web:
+  forceHttps: false
+  skipSSLVerification: true
+
+externalRedis:
+  host: "redis.example.com"
+  existingSecret: "external-redis-secret"
+
+externalPostgresql:
+  host: "postgresql.example.com"
+  database: "outline"
+  existingSecret: "external-postgresql-secret"
+
+fileStorage:
+  mode: "local"
+
+  local:
+    persistence:
+      enabled: true
+      storageClass: "longhorn-static"
+
+resources:
+  requests:
+    cpu: "1000m"
+    memory: "512Mi"
+  limits:
+    cpu: "2000m"
+    memory: "2Gi"
+```
 
 ## Authentication Methods
 
@@ -462,8 +542,6 @@ helm upgrade [RELEASE_NAME] community-charts/outline
 | database.connectionPoolMax | string | `"20"` | The maximum number of connections in the connection pool. |
 | database.connectionPoolMin | string | `""` | The minimum number of connections in the connection pool. |
 | database.sslMode | string | `"disable"` | The SSL mode to use for the database connection. possible values are: "disable", "allow", "require", "prefer", "verify-ca", "verify-full"  |
-| dbHealthCheck | object | `{"enabled":true}` | This is for setting up the db health check. |
-| dbHealthCheck.enabled | bool | `true` | This is for setting up the db health check enabled. |
 | defaultLanguage | string | `"en_US"` | This is for setting up the default language. See translate.getoutline.com for a list of available language codes and their rough percentage translated |
 | externalPostgresql | object | `{"database":"outline","existingSecret":"","host":"","password":"","port":5432,"username":"postgres"}` | External PostgreSQL parameters |
 | externalPostgresql.database | string | `"outline"` | The name of the external PostgreSQL database. For more information: https://docs.getoutline.com/s/hosting/doc/docker-7pfeLP5a8t |
@@ -598,7 +676,7 @@ helm upgrade [RELEASE_NAME] community-charts/outline
 | nodeSelector | object | `{}` | For more information checkout: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector |
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
 | podLabels | object | `{}` | This is for setting Kubernetes Labels to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/ |
-| podSecurityContext | object | `{}` | This is for setting Security Context to a Pod. For more information checkout: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ |
+| podSecurityContext | object | `{"fsGroup":1001,"fsGroupChangePolicy":"OnRootMismatch"}` | This is for setting Security Context to a Pod. For more information checkout: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ |
 | postgresql | object | `{"architecture":"standalone","auth":{"database":"outline","password":"","username":""},"enabled":false,"primary":{"persistence":{"enabled":true,"existingClaim":""},"service":{"ports":{"postgresql":5432}}}}` | Bitnami PostgreSQL configuration |
 | postgresql.architecture | string | `"standalone"` | Enable postgresql architecture. |
 | postgresql.auth | object | `{"database":"outline","password":"","username":""}` | This is for setting up the auth. |
@@ -625,12 +703,12 @@ helm upgrade [RELEASE_NAME] community-charts/outline
 | readinessProbe.initialDelaySeconds | int | `10` | This is for setting up the initial delay seconds. |
 | readinessProbe.periodSeconds | int | `30` | This is for setting up the period seconds. |
 | readinessProbe.timeoutSeconds | int | `3` | This is for setting up the timeout seconds. |
-| redis | object | `{"architecture":"standalone","enabled":false,"master":{"persistence":{"enabled":false},"service":{"ports":{"redis":6379}}}}` | Bitnami Redis configuration |
+| redis | object | `{"architecture":"standalone","auth":{"enabled":true},"enabled":false,"master":{"persistence":{"enabled":false},"service":{"ports":{"redis":6379}}}}` | Bitnami Redis configuration |
 | redis.enabled | bool | `false` | Enable redis |
 | replicaCount | int | `1` |  |
 | resources | object | `{}` | This is to setup the resources more information can be found here: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/ |
 | secretKey | string | `""` | This is for setting up the secret key. It will be auto generated if not set. |
-| securityContext | object | `{}` | This is for setting Security Context to a Container. For more information checkout: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ |
+| securityContext | object | `{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]},"privileged":false,"readOnlyRootFilesystem":false,"runAsGroup":1001,"runAsNonRoot":true,"runAsUser":1001}` | This is for setting Security Context to a Container. For more information checkout: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/ |
 | service | object | `{"annotations":{},"name":"http","port":3000,"type":"ClusterIP"}` | This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/ |
 | service.annotations | object | `{}` | Additional service annotations |
 | service.name | string | `"http"` | Default Service name |

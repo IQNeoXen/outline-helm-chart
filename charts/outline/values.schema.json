@@ -1580,24 +1580,6 @@
       "title": "readinessProbe",
       "type": "object"
     },
-    "dbHealthCheck": {
-      "additionalProperties": false,
-      "description": "This is for setting up the db health check.",
-      "properties": {
-        "enabled": {
-          "default": true,
-          "description": "This is for setting up the db health check enabled.",
-          "required": [],
-          "title": "enabled",
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "enabled"
-      ],
-      "title": "dbHealthCheck",
-      "type": "object"
-    },
     "initContainers": {
       "description": "Additional init containers on the output Deployment definition.",
       "items": {
@@ -1680,6 +1662,22 @@
           "title": "architecture",
           "type": "string"
         },
+        "auth": {
+          "additionalProperties": true,
+          "properties": {
+            "enabled": {
+              "default": false,
+              "required": [],
+              "title": "enabled",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "title": "auth",
+          "type": "object"
+        },
         "master": {
           "additionalProperties": true,
           "properties": {
@@ -1740,6 +1738,7 @@
       "required": [
         "enabled",
         "architecture",
+        "auth",
         "master"
       ],
       "title": "redis",
@@ -2724,7 +2723,6 @@
     "resources",
     "livenessProbe",
     "readinessProbe",
-    "dbHealthCheck",
     "initContainers",
     "extraContainers",
     "volumes",

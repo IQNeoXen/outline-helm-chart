@@ -27,6 +27,86 @@ _See [helm install](https://helm.sh/docs/helm/helm_install/) for command documen
 
 > **Tip**: Search all available chart versions using `helm search repo community-charts -l`. Please don't forget to run `helm repo update` before the command.
 
+## Full Example
+
+If you prefer to use self-signed certificate, please install `cert-manager` and `selfsigned-issuer` in your cluster. You can install cert-manager with following command:
+
+```console
+helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version v1.17.0 --set crds.enabled=true
+```
+
+Please find more information about cert-manager [here](https://cert-manager.io/docs/installation/).
+
+And you can create selfsigned-issuer with following command:
+
+```console
+echo "apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: selfsigned-issuer
+spec:
+  selfSigned: {}" | kubectl apply -f -
+```
+
+Please find more information about selfsigned-issuer [here](https://cert-manager.io/docs/configuration/selfsigned/).
+
+Now you can use the following values.yaml file to install the chart. Please don't forget to import selfsigned certificate to your computer and change trust level of the certificate. Or you can use a valid certificate from your certificate authority.
+
+```yaml
+strategy:
+  type: Recreate
+
+auth:
+  gitea:
+    enabled: true
+    clientId: "123456ab-d789-12ef-g345-f6789ab12cd3"
+    clientSecret: "gto_a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+    baseUrl: "https://gitea.example.com"
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: "selfsigned-issuer"
+  hosts:
+    - host: "outline.example.com"
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: "outline-selfsigned-cert-tls"
+      hosts:
+        - "outline.example.com"
+
+web:
+  forceHttps: false
+  skipSSLVerification: true
+
+externalRedis:
+  host: "redis.example.com"
+  existingSecret: "external-redis-secret"
+
+externalPostgresql:
+  host: "postgresql.example.com"
+  database: "outline"
+  existingSecret: "external-postgresql-secret"
+
+fileStorage:
+  mode: "local"
+
+  local:
+    persistence:
+      enabled: true
+      storageClass: "longhorn-static"
+
+resources:
+  requests:
+    cpu: "1000m"
+    memory: "512Mi"
+  limits:
+    cpu: "2000m"
+    memory: "2Gi"
+```
+
 ## Authentication Methods
 
 Outline supports multiple authentication methods. Here are examples for each:
