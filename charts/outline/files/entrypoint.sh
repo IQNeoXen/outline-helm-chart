@@ -7,7 +7,7 @@ JSON=$(printf '{"host":"%s","port":%d,"username":"%s","password":"%s"}' \
 # Base64-encode the JSON string
 BASE64_JSON=$(echo -n "$JSON" | base64)
 
-# Set the REDIS_URL environment variable
+# Set the REDIS_URL environment variable. You can find more information about REDIS_URL [here](https://docs.getoutline.com/s/hosting/doc/redis-LGM4BFXYp4#h-advanced)
 export REDIS_URL="ioredis://$BASE64_JSON"
 
 # Execute the original command (yarn start)
