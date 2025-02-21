@@ -102,9 +102,7 @@
       "properties": {
         "annotations": {
           "description": "Annotations to add to the service account. AWS EKS users can assign role arn from here.\nPlease find more information from here:\nhttps://docs.aws.amazon.com/eks/latest/userguide/associate-service-account-role.html",
-          "additionalProperties": {
-            "type": "string"
-          },
+          "additionalProperties": true,
           "default": {},
           "required": [],
           "title": "annotations",
@@ -142,9 +140,7 @@
       "type": "object"
     },
     "podAnnotations": {
-      "additionalProperties": {
-        "type": "string"
-      },
+      "additionalProperties": true,
       "default": {},
       "description": "This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/",
       "required": [],
@@ -182,9 +178,7 @@
       "description": "This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/",
       "properties": {
         "annotations": {
-          "additionalProperties": {
-            "type": "string"
-          },
+          "additionalProperties": true,
           "default": {},
           "description": "Additional service annotations",
           "required": [],
@@ -440,9 +434,7 @@
                   "type": "array"
                 },
                 "annotations": {
-                  "additionalProperties": {
-                    "type": "string"
-                  },
+                  "additionalProperties": true,
                   "default": {},
                   "description": "This is for setting up the local file storage persistence annotations.",
                   "required": [],
@@ -1336,9 +1328,7 @@
       "description": "This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/",
       "properties": {
         "annotations": {
-          "additionalProperties": {
-            "type": "string"
-          },
+          "additionalProperties": true,
           "default": {},
           "description": "This is for setting up the ingress annotations.",
           "required": [],
@@ -2196,9 +2186,7 @@
               "type": "string"
             },
             "annotations": {
-              "additionalProperties": {
-                "type": "string"
-              },
+              "additionalProperties": true,
               "default": {},
               "description": "Minio persistence annotations",
               "required": [],

@@ -16,7 +16,7 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 0.2.0
+version: 0.2.1
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
@@ -59,7 +59,7 @@ annotations:
       url: https://docs.getoutline.com/s/hosting/
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/changes: |
-    - Fix persistence volume file permission error and redis url with username and password problem
+    - Fix ArgoCD ingress annotations schema validation problem
   artifacthub.io/images: |
     - name: outline
       image: outlinewiki/outline:0.82.0
