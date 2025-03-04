@@ -86,7 +86,9 @@ spec:
             - name: DEFAULT_LANGUAGE
               value: {{ .Values.defaultLanguage | quote }}
             - name: URL
-            {{- if .Values.ingress.enabled }}
+            {{- if .Values.url }}
+              value: {{ .Values.url | quote }}
+            {{- else if .Values.ingress.enabled }}
             {{- $schema := ternary "http" "https" (empty .Values.ingress.tls) }}
               {{- with (first .Values.ingress.hosts) }}
               value: {{ printf "%s://%s" $schema .host }}

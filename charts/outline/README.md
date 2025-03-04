@@ -4,7 +4,7 @@
 
 A Helm chart for the fastest knowledge base for growing teams. Beautiful, realtime collaborative, feature packed, and markdown compatible.
 
-![Version: 0.2.1](https://img.shields.io/badge/Version-0.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.82.0](https://img.shields.io/badge/AppVersion-0.82.0-informational?style=flat-square)
+![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.82.0](https://img.shields.io/badge/AppVersion-0.82.0-informational?style=flat-square)
 
 ## Get Helm Repository Info
 
@@ -730,6 +730,7 @@ helm upgrade [RELEASE_NAME] community-charts/outline
 | smtp.username | string | `""` | This is for setting up the smtp username. |
 | strategy | object | `{"rollingUpdate":{"maxSurge":"25%","maxUnavailable":"25%"},"type":"RollingUpdate"}` | This will set the deployment strategy more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/#strategy |
 | tolerations | list | `[]` | For more information checkout: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/ |
+| url | string | `""` | This is for setting up the url manually. It will be auto generated if not set. Depending to your ingress configuration, it can be automatically generated from ingress domain or service definition. |
 | utilsSecret | string | `""` | This is for setting up the utils secret. It will be auto generated if not set. |
 | volumeMounts | list | `[]` |  |
 | volumes | list | `[]` | Additional volumes on the output Deployment definition. |

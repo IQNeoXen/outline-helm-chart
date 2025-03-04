@@ -466,6 +466,16 @@ tests:
             name: URL
             value: https://fake-host.local
 
+  - it: should set url when url is set
+    set:
+      url: https://my.company.com
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: URL
+            value: https://my.company.com
+
   - it: should set rate limiter when rateLimiter is enabled
     set:
       rateLimiter:

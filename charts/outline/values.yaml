@@ -88,6 +88,9 @@ secretKey: ""
 # -- This is for setting up the utils secret. It will be auto generated if not set.
 utilsSecret: ""
 
+# -- This is for setting up the url manually. It will be auto generated if not set. Depending to your ingress configuration, it can be automatically generated from ingress domain or service definition.
+url: ""
+
 # -- This is for setting up the default language. See translate.getoutline.com for a list of available language codes and their rough percentage translated
 defaultLanguage: en_US
 

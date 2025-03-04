@@ -219,6 +219,22 @@
       "title": "service",
       "type": "object"
     },
+    "url": {
+      "default": "",
+      "description": "This is for setting up the url manually. It will be auto generated if not set. Depending to your ingress configuration, it can be automatically generated from ingress domain or service definition.",
+      "required": [],
+      "title": "url",
+      "type": "string",
+      "anyOf": [
+        {
+          "pattern": "^https?://[\\w\\-\\.]+\\.[a-zA-Z]{2,}(/[\\w\\-\\./?%&=]*)?$",
+          "format": "uri"
+        },
+        {
+          "const": ""
+        }
+      ]
+    },
     "secretKey": {
       "default": "",
       "description": "This is for setting up the secret key. It will be auto generated if not set.",
@@ -2694,6 +2710,7 @@
     "podSecurityContext",
     "securityContext",
     "service",
+    "url",
     "secretKey",
     "utilsSecret",
     "defaultLanguage",
