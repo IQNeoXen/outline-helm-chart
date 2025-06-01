@@ -168,9 +168,9 @@ jobs:
           for chart in ${{ steps.detect-changed.outputs.changed_charts }}; do
             echo "# Changelog" > $chart/RELEASE-NOTES.md
             echo "" >> $chart/RELEASE-NOTES.md
-            changes=$(awk '/artifacthub.io\/changes: \|/{flag=1; next} /^  artifacthub.io/{flag=0} flag {print substr($0, 5)}' $chart/Chart.yaml)
+            changes=$(yq eval '.annotations["artifacthub.io/changes"] | select(. != null)' $chart/Chart.yaml)
             if [ -n "$changes" ]; then
-              echo "$changes" >> $chart/RELEASE-NOTES.md
+              echo "$changes" | yq eval -o=json | jq -r '.[] | "- **\(.kind | .[0:1] | ascii_upcase)\(.kind | .[1:])**: \(.description)\n  \(.links // [] | map("  - [\(.name)](\(.url))") | join("\n"))"' >> $chart/RELEASE-NOTES.md
             else
               echo "No changes recorded for this release." >> $chart/RELEASE-NOTES.md
             fi
