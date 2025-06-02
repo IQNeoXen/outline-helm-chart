@@ -21,6 +21,9 @@ jobs:
   lint-test:
     runs-on: ubuntu-latest
 
+    permissions:
+      pull-requests: write
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -105,6 +108,26 @@ jobs:
             fi
           done
         if: steps.list-changed.outputs.changed == 'true'
+
+      - name: Post Chart Changes to Pull Request
+        if: github.event_name == 'pull_request' && steps.list-changed.outputs.changed == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          comment_body="### Chart Release Changes\n\n"
+          for chart in ${{ steps.list-changed.outputs.changed_charts }}; do
+            comment_body+ "#### $chart\n\n"
+            changes=$(yq eval '.annotations["artifacthub.io/changes"] | select(. != null)' $chart/Chart.yaml)
+            if [ -n "$changes" ]; then
+              formatted_changes=$(echo "$changes" | yq eval -o=json | jq -r '.[] | "- **\(.kind | .[0:1] | ascii_upcase)\(.kind | .[1:])**: \(.description)\n  \(.links // [] | map("  - [\(.name)](\(.url))") | join("\n"))")
+              comment_body+="$formatted_changes\n\n"
+            else
+              comment_body+="No changes recorded for this release.\n\n"
+            fi
+          done
+          comment_body=$(echo -e "$comment_body" | sed 's/"/\\"/g')
+          jq -n --arg body "$comment_body" '{"body": $body}' > comment.json
+          gh pr comment ${{ github.event.pull_request.number }} --body-file comment.json || echo "Failed to post comment"
 
   release:
     needs: lint-test
