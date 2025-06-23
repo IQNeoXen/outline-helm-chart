@@ -6,6 +6,10 @@ A Helm chart for the fastest knowledge base for growing teams. Beautiful, realti
 
 ![Version: 0.3.5](https://img.shields.io/badge/Version-0.3.5-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 0.84.0](https://img.shields.io/badge/AppVersion-0.84.0-informational?style=flat-square)
 
+## Official Documentation
+
+For detailed usage instructions, configuration options, and additional information about the `outline` Helm chart, refer to the [official documentation](https://community-charts.github.io/docs/charts/outline/usage).
+
 ## Get Helm Repository Info
 
 ```console

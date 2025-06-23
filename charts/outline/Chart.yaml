@@ -51,6 +51,8 @@ annotations:
   artifacthub.io/links: |
     - name: Chart Source
       url: https://github.com/community-charts/helm-charts
+    - name: Chart Usage Page
+      url: https://community-charts.github.io/docs/charts/outline/usage
     - name: Upstream Project
       url: https://github.com/outline/outline/
     - name: Official Usage Documentation
