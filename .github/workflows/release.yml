@@ -23,8 +23,13 @@ jobs:
 
     container:
       image: artifacthub/ah:v1.20.0
+      options: --user root
 
     steps:
+      - name: Fix permissions
+        run: |
+          chmod -R 777 /__w/_temp/
+
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
