@@ -14,11 +14,35 @@ on:
       - '.github/workflows/release.yml'
 
 env:
-  HELM_VERSION: v3.17.2
-  HELM_UNITTEST_VERSION: v0.8.0
+  HELM_VERSION: v3.18.3
+  HELM_UNITTEST_VERSION: v0.8.2
 
 jobs:
+  lint-ah:
+    runs-on: ubuntu-latest
+
+    container:
+      image: artifacthub/ah:v1.20.0
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Artifact Hub lint
+        run: |
+          for CHART in charts/*; do
+            if [ -d "$CHART" ]; then
+              echo "Linting $CHART"
+              ah lint -p "$CHART" || exit 1
+            fi
+          done
+          echo "All charts linted successfully."
+
   lint-test:
+    needs: lint-ah
+
     runs-on: ubuntu-latest
 
     permissions:
@@ -59,24 +83,24 @@ jobs:
             echo "changed_charts=$charts" >> $GITHUB_OUTPUT
           fi
 
-      - name: Run Artifact Hub lint
-        run: |
-          curl -s https://api.github.com/repos/artifacthub/hub/releases/latest \
-            | grep -E 'browser_download_url' \
-            | grep linux_amd64 \
-            | grep -Eo 'https://[^\"]*' \
-            | xargs wget -q -O - \
-            | tar -xz
+      # - name: Run Artifact Hub lint
+      #   run: |
+      #     curl -s https://api.github.com/repos/artifacthub/hub/releases/latest \
+      #       | grep -E 'browser_download_url' \
+      #       | grep linux_amd64 \
+      #       | grep -Eo 'https://[^\"]*' \
+      #       | xargs wget -q -O - \
+      #       | tar -xz
 
-          for CHART in charts/*; do
-            if [ -d "$CHART" ]; then
-              echo "Linting $CHART"
-              ./ah lint -p "$CHART" || exit 1
-            fi
-          done
-          echo "All charts linted successfully."
+      #     for CHART in charts/*; do
+      #       if [ -d "$CHART" ]; then
+      #         echo "Linting $CHART"
+      #         ./ah lint -p "$CHART" || exit 1
+      #       fi
+      #     done
+      #     echo "All charts linted successfully."
 
-          rm -f ./ah
+      #     rm -f ./ah
 
       - name: install helm unittest plugin
         if: steps.list-changed.outputs.changed == 'true'
