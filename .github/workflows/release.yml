@@ -5,13 +5,11 @@ on:
     branches: [ main ]
     paths:
       - 'charts/**'
-      - '.github/workflows/release.yml'
 
   pull_request:
     branches: [ main ]
     paths:
       - 'charts/**'
-      - '.github/workflows/release.yml'
 
 env:
   HELM_VERSION: v3.18.3
