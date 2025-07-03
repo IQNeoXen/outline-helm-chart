@@ -16,7 +16,7 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 0.3.5
+version: 0.4.0
 
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
@@ -61,7 +61,25 @@ annotations:
       url: https://docs.getoutline.com/s/hosting/
   artifacthub.io/containsSecurityUpdates: "false"
   artifacthub.io/changes: |
-    - Update outlinewiki/outline image version to 0.84.0
+    - kind: added
+      description: Add support for external secrets to redis, postgresql, s3, smtp, slack, dropbox, google, azure, oidc, github, discord, gitea, gitlab, auth0, keycloak, saml, iframely, and openai authentication & integrations. See the values.yaml for more details.
+      links:
+        - name: GitHub Issue
+          url: https://github.com/community-charts/helm-charts/issues/156
+    - kind: fixed
+      description: Fix missing dropbox app key secret implementation
+    - kind: added
+      description: Add support for dnsPolicy, dnsConfig, and hostAliases.
+      links:
+        - name: GitHub Issue
+          url: https://github.com/community-charts/helm-charts/issues/157
+    - kind: added
+      description: Add enabled flag to service.
+    - kind: added
+      description: Add support for linear and notion integrations.
+      links:
+        - name: GitHub Issue
+          url: https://github.com/community-charts/helm-charts/issues/161
   artifacthub.io/images: |
     - name: outline
       image: outlinewiki/outline:0.84.0
