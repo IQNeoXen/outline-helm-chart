@@ -72,14 +72,30 @@ jobs:
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo add minio https://charts.min.io
 
-      - name: Run chart-testing (list-changed)
+      - name: Detect changed Outline chart
         id: list-changed
         run: |
-          changed=$(ct --config ./.github/configs/ct-lint.yaml list-changed | grep '^charts/outline$' || true)
-          charts=$(echo "$changed" | tr '\n' ' ' | xargs)
+          changed=""
+
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            changed=$(ct --config ./.github/configs/ct-lint.yaml list-changed | grep '^charts/outline$' || true)
+          else
+            base="${{ github.event.before }}"
+            if [[ -z "$base" || "$base" == "0000000000000000000000000000000000000000" ]]; then
+              changed=$(git diff-tree --no-commit-id --name-only -r "${{ github.sha }}" | grep '^charts/outline/' || true)
+            else
+              changed=$(git diff --name-only "$base" "${{ github.sha }}" | grep '^charts/outline/' || true)
+            fi
+          fi
+
+          echo "Changed Outline chart files:"
+          echo "$changed"
+
           if [[ -n "$changed" ]]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
-            echo "changed_charts=$charts" >> "$GITHUB_OUTPUT"
+            echo "changed_charts=charts/outline" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Install Helm unittest plugin
