@@ -72,26 +72,32 @@ jobs:
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo add minio https://charts.min.io
 
-      - name: Detect changed Outline chart
+      - name: Detect changed Outline chart or CI config
         id: list-changed
         run: |
-          changed=""
+          changed_chart=""
+          changed_ci=""
+          changed_files=""
 
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            changed=$(ct --config ./.github/configs/ct-lint.yaml list-changed | grep '^charts/outline$' || true)
+            changed_chart=$(ct --config ./.github/configs/ct-lint.yaml list-changed | grep '^charts/outline$' || true)
+            changed_files=$(git diff --name-only "${{ github.event.pull_request.base.sha }}" "${{ github.event.pull_request.head.sha }}" || true)
           else
             base="${{ github.event.before }}"
             if [[ -z "$base" || "$base" == "0000000000000000000000000000000000000000" ]]; then
-              changed=$(git diff-tree --no-commit-id --name-only -r "${{ github.sha }}" | grep '^charts/outline/' || true)
+              changed_files=$(git diff-tree --no-commit-id --name-only -r "${{ github.sha }}" || true)
             else
-              changed=$(git diff --name-only "$base" "${{ github.sha }}" | grep '^charts/outline/' || true)
+              changed_files=$(git diff --name-only "$base" "${{ github.sha }}" || true)
             fi
+            changed_chart=$(echo "$changed_files" | grep '^charts/outline/' || true)
           fi
 
-          echo "Changed Outline chart files:"
-          echo "$changed"
+          changed_ci=$(echo "$changed_files" | grep -E '^(\.github/workflows/release\.yml|\.github/configs/)' || true)
 
-          if [[ -n "$changed" ]]; then
+          echo "Changed files:"
+          echo "$changed_files"
+
+          if [[ -n "$changed_chart" || -n "$changed_ci" ]]; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
             echo "changed_charts=charts/outline" >> "$GITHUB_OUTPUT"
           else
