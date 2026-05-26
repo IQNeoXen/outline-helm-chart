@@ -4,16 +4,20 @@
 
 A Helm chart for the fastest knowledge base for growing teams. Beautiful, realtime collaborative, feature packed, and markdown compatible.
 
-![Version: 0.7.4](https://img.shields.io/badge/Version-0.7.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.7.1](https://img.shields.io/badge/AppVersion-1.7.1-informational?style=flat-square)
+![Version: 0.8.0](https://img.shields.io/badge/Version-0.8.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.7.1](https://img.shields.io/badge/AppVersion-1.7.1-informational?style=flat-square)
+
+> This chart is an independently maintained fork of the Outline chart originally
+> published by community-charts/helm-charts. It is not affiliated with,
+> endorsed by, or sponsored by Outline or community-charts.
 
 ## Official Documentation
 
-For detailed usage instructions, configuration options, and additional information about the `outline` Helm chart, refer to the [official documentation](https://community-charts.github.io/docs/charts/outline/usage).
+For detailed usage instructions, configuration options, and additional information about Outline, refer to the [official Outline documentation](https://docs.getoutline.com/).
 
 ## Get Helm Repository Info
 
 ```console
-helm repo add community-charts https://community-charts.github.io/helm-charts
+helm repo add outline https://IQNeoXen.github.io/outline-helm-chart
 helm repo update
 ```
 
@@ -22,14 +26,14 @@ _See [`helm repo`](https://helm.sh/docs/helm/helm_repo/) for command documentati
 ## Installing the Chart
 
 ```console
-helm install [RELEASE_NAME] community-charts/outline
+helm install [RELEASE_NAME] outline/outline
 ```
 
 _See [configuration](#configuration) below._
 
 _See [helm install](https://helm.sh/docs/helm/helm_install/) for command documentation._
 
-> **Tip**: Search all available chart versions using `helm search repo community-charts -l`. Please don't forget to run `helm repo update` before the command.
+> **Tip**: Search all available chart versions using `helm search repo outline -l`. Please don't forget to run `helm repo update` before the command.
 
 ## Full Example
 
@@ -533,7 +537,7 @@ _See [helm uninstall](https://helm.sh/docs/helm/helm_uninstall/) for command doc
 ## Upgrading Chart
 
 ```console
-helm upgrade [RELEASE_NAME] community-charts/outline
+helm upgrade [RELEASE_NAME] outline/outline
 ```
 
 ## Values
@@ -907,7 +911,7 @@ helm upgrade [RELEASE_NAME] community-charts/outline
 
 ## Source Code
 
-* <https://github.com/community-charts/helm-charts>
+* <https://github.com/IQNeoXen/outline-helm-chart>
 * <https://github.com/outline/outline/>
 
 ## Chart Development
@@ -922,4 +926,4 @@ helm unittest --strict --file 'unittests/**/*.yaml' charts/outline
 
 | Name | Email | Url |
 | ---- | ------ | --- |
-| burakince | <burak.ince@linux.org.tr> | <https://www.burakince.com> |
+| IQNeoXen |  | <https://github.com/IQNeoXen> |

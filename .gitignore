@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+
+# Editor/IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Helm build artifacts
+*.tgz
+*.tgz.prov
+charts/*/charts/
+
+# Local tooling/cache
+.tmp/
+tmp/
+.cache/
+
+# Secrets / local credentials
+*.key
+*.pem
+*.p12
+*.pfx
+.env
+.env.*
+!.env.example

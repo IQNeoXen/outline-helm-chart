@@ -6,7 +6,8 @@ target-branch: main
 chart-dirs:
   - charts
 chart-repos:
-  - community-charts=https://community-charts.github.io/helm-charts
+  - bitnami=https://charts.bitnami.com/bitnami
+  - minio=https://charts.min.io
 helm-extra-args: "--timeout 600s"
 validate-chart-schema: true
 validate-chart-values: true

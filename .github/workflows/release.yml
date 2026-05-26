@@ -1,15 +1,23 @@
-name: Release Charts
+name: Lint, Test, and Release Chart
 
 on:
   push:
     branches: [ main ]
     paths:
-      - 'charts/**'
+      - 'charts/outline/**'
+      - '.github/workflows/release.yml'
+      - '.github/configs/**'
+      - 'README.md'
+      - 'LICENSE'
 
   pull_request:
     branches: [ main ]
     paths:
-      - 'charts/**'
+      - 'charts/outline/**'
+      - '.github/workflows/release.yml'
+      - '.github/configs/**'
+      - 'README.md'
+      - 'LICENSE'
 
 env:
   HELM_VERSION: v3.18.3
@@ -30,14 +38,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run Artifact Hub lint
-        run: |
-          for CHART in charts/*; do
-            if [ -d "$CHART" ]; then
-              echo "Linting $CHART"
-              ah lint -p "$CHART" || exit 1
-            fi
-          done
-          echo "All charts linted successfully."
+        run: ah lint -p charts/outline
 
   lint-test:
     needs: lint-ah
@@ -45,6 +46,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      contents: read
       pull-requests: write
 
     steps:
@@ -67,51 +69,36 @@ jobs:
 
       - name: Add dependency chart repos
         run: |
-          helm repo add jetstack https://charts.jetstack.io
           helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm repo add community-charts https://community-charts.github.io/helm-charts
           helm repo add minio https://charts.min.io
 
       - name: Run chart-testing (list-changed)
         id: list-changed
         run: |
-          changed=$(ct --config ./.github/configs/ct-lint.yaml list-changed)
+          changed=$(ct --config ./.github/configs/ct-lint.yaml list-changed | grep '^charts/outline$' || true)
           charts=$(echo "$changed" | tr '\n' ' ' | xargs)
           if [[ -n "$changed" ]]; then
-            echo "changed=true" >> $GITHUB_OUTPUT
-            echo "changed_charts=$charts" >> $GITHUB_OUTPUT
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "changed_charts=$charts" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: install helm unittest plugin
+      - name: Install Helm unittest plugin
         if: steps.list-changed.outputs.changed == 'true'
         run: |
           helm env
-          helm plugin install https://github.com/helm-unittest/helm-unittest.git --version ${{ env.HELM_UNITTEST_VERSION }}
+          helm plugin install https://github.com/helm-unittest/helm-unittest.git --version ${{ env.HELM_UNITTEST_VERSION }} --verify=false
 
       - name: Run chart-testing (lint)
-        run: ct lint --debug --config ./.github/configs/ct-lint.yaml --lint-conf ./.github/configs/lintconf.yaml
+        if: steps.list-changed.outputs.changed == 'true'
+        run: ct lint --debug --config ./.github/configs/ct-lint.yaml --lint-conf ./.github/configs/lintconf.yaml --charts charts/outline
 
       - name: Create kind cluster
         uses: helm/kind-action@v1.14.0
         if: steps.list-changed.outputs.changed == 'true'
 
       - name: Run chart-testing (install)
-        run: |
-          for chart in ${{ steps.list-changed.outputs.changed_charts }}; do
-            echo "Testing $chart"
-            if [ -f "$chart/.skip-kind-test" ]; then
-              echo "Skipping Kind test for $chart due to .skip-kind-test file"
-            else
-              if [ -f "$chart/values-kind.yaml" ]; then
-                echo "Using values-kind.yaml for $chart"
-                ct install --config ./.github/configs/ct-lint.yaml --charts "$chart" --helm-extra-set-args "--values $chart/values-kind.yaml" --helm-extra-args "--timeout 600s"
-              else
-                echo "No values-kind.yaml for $chart"
-                ct install --config ./.github/configs/ct-lint.yaml --charts "$chart" --helm-extra-args "--timeout 600s"
-              fi
-            fi
-          done
         if: steps.list-changed.outputs.changed == 'true'
+        run: ct install --config ./.github/configs/ct-lint.yaml --charts charts/outline --helm-extra-set-args "--values charts/outline/values-kind.yaml" --helm-extra-args "--timeout 600s"
 
       - name: Post Chart Changes to Pull Request
         if: github.event_name == 'pull_request' && steps.list-changed.outputs.changed == 'true'
@@ -119,19 +106,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           comment_body="### Chart Release Changes\n\n"
-          for chart in ${{ steps.list-changed.outputs.changed_charts }}; do
-            comment_body+="#### $chart changes\n\n"
-            changes=$(yq eval '.annotations["artifacthub.io/changes"] | select(. != null)' "$chart/Chart.yaml" || echo "Failed to parse $chart/Chart.yaml")
-            if [ -n "$changes" ] && [ "$changes" != "Failed to parse $chart/Chart.yaml" ]; then
-              formatted_changes=$(echo "$changes" | yq eval -o=json | jq -r '.[] | "- **\(.kind | .[0:1] | ascii_upcase)\(.kind | .[1:])**: \(.description)\n  \(.links // [] | map("  - [\(.name)](\(.url))") | join("\n"))"')
-              comment_body+="$formatted_changes\n\n"
-            else
-              comment_body+="No changes recorded for this release.\n\n"
-            fi
-          done
-          safe_comment_body=$(echo -e "$comment_body" | sed 's/"/\\"/g' | sed "s/'/\\'/g")
-          echo -e "$safe_comment_body" > comment.json
-          gh pr comment ${{ github.event.pull_request.number }} --body-file comment.json --edit-last --create-if-none || echo "Failed to post or edit comment"
+          chart="charts/outline"
+          comment_body+="#### $chart changes\n\n"
+          changes=$(yq eval '.annotations["artifacthub.io/changes"] | select(. != null)' "$chart/Chart.yaml" || echo "Failed to parse $chart/Chart.yaml")
+          if [ -n "$changes" ] && [ "$changes" != "Failed to parse $chart/Chart.yaml" ]; then
+            formatted_changes=$(echo "$changes" | yq eval -o=json | jq -r '.[] | "- **\(.kind | .[0:1] | ascii_upcase)\(.kind | .[1:])**: \(.description)\n  \(.links // [] | map("  - [\(.name)](\(.url))") | join("\n"))"')
+            comment_body+="$formatted_changes\n\n"
+          else
+            comment_body+="No changes recorded for this release.\n\n"
+          fi
+          echo -e "$comment_body" > comment.md
+          gh pr comment ${{ github.event.pull_request.number }} --body-file comment.md --edit-last --create-if-none || echo "Failed to post or edit comment"
 
   release:
     needs: lint-test
@@ -141,7 +126,7 @@ jobs:
     permissions:
       contents: write
 
-    if: ${{ github.event_name != 'pull_request' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
 
     steps:
       - name: Checkout
@@ -159,52 +144,79 @@ jobs:
         with:
           version: ${{ env.HELM_VERSION }}
 
+      - name: Add dependency chart repos
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add minio https://charts.min.io
+
+      - name: Detect Outline chart changes
+        id: detect-changed
+        run: |
+          base="${{ github.event.before }}"
+          if [[ -z "$base" || "$base" == "0000000000000000000000000000000000000000" ]]; then
+            changed=$(git diff-tree --no-commit-id --name-only -r "${{ github.sha }}" | grep '^charts/outline/' || true)
+          else
+            changed=$(git diff --name-only "$base" "${{ github.sha }}" | grep '^charts/outline/' || true)
+          fi
+
+          echo "Changed Outline chart files:"
+          echo "$changed"
+
+          if [[ -n "$changed" ]]; then
+            echo "chart_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "chart_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Extract changes from Chart.yaml
+        if: steps.detect-changed.outputs.chart_changed == 'true'
+        run: |
+          chart="charts/outline"
+          echo "# Changelog" > "$chart/RELEASE-NOTES.md"
+          echo "" >> "$chart/RELEASE-NOTES.md"
+          changes=$(yq eval '.annotations["artifacthub.io/changes"] | select(. != null)' "$chart/Chart.yaml")
+          if [ -n "$changes" ]; then
+            echo "$changes" | yq eval -o=json | jq -r '.[] | "- **\(.kind | .[0:1] | ascii_upcase)\(.kind | .[1:])**: \(.description)\n  \(.links // [] | map("  - [\(.name)](\(.url))") | join("\n"))"' >> "$chart/RELEASE-NOTES.md"
+          else
+            echo "No changes recorded for this release." >> "$chart/RELEASE-NOTES.md"
+          fi
+
+      - name: Check chart signing secrets
+        id: signing-secrets
+        if: steps.detect-changed.outputs.chart_changed == 'true'
+        run: |
+          missing=()
+          [[ -z "${{ secrets.CR_KEY }}" ]] && missing+=("CR_KEY")
+          [[ -z "${{ secrets.GPG_KEYRING_BASE64 }}" ]] && missing+=("GPG_KEYRING_BASE64")
+          [[ -z "${{ secrets.GPG_PASSPHRASE }}" ]] && missing+=("GPG_PASSPHRASE")
+
+          if (( ${#missing[@]} > 0 )); then
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Skipping signed chart release because required signing secrets are missing: ${missing[*]}"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Prepare GPG environment for Helm
         id: import-gpg
+        if: steps.detect-changed.outputs.chart_changed == 'true' && steps.signing-secrets.outputs.configured == 'true'
+        env:
+          GPG_KEYRING_BASE64: ${{ secrets.GPG_KEYRING_BASE64 }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
         run: |
           GNUPG_DIR="$(mktemp --directory --tmpdir=${{ runner.temp }})"
 
           # Import GPG passphrase
-          echo '${{ secrets.GPG_PASSPHRASE }}' > "${GNUPG_DIR}/passphrase"
+          printf '%s' "$GPG_PASSPHRASE" > "${GNUPG_DIR}/passphrase"
           echo "passphrase-file=${GNUPG_DIR}/passphrase" >> "${GITHUB_OUTPUT}"
 
-          # Import GPG signing key
-          echo '${{ secrets.GPG_KEYRING_BASE64 }}' | base64 -d | gpg --dearmor > "${GNUPG_DIR}/secring.gpg"
+          # Import GPG signing key in the legacy keyring format expected by Helm/chart-releaser
+          printf '%s' "$GPG_KEYRING_BASE64" | base64 -d > "${GNUPG_DIR}/secring.gpg"
           echo "keyring=${GNUPG_DIR}/secring.gpg" >> "${GITHUB_OUTPUT}"
-
-      - name: Add dependency chart repos
-        run: |
-          helm repo add jetstack https://charts.jetstack.io
-          helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm repo add community-charts https://community-charts.github.io/helm-charts
-          helm repo add minio https://charts.min.io
-
-      - name: Detect Changed Charts
-        id: detect-changed
-        run: |
-          changed=$(git diff --name-only ${{ github.sha }}^ ${{ github.sha }} | grep '^charts/' | cut -d/ -f1-2 | sort -u)
-          echo "Changed charts: '$changed'"
-          charts=$(echo "$changed" | tr '\n' ' ' | xargs)
-          if [[ -n "$changed" ]]; then
-            echo "changed_charts=$charts" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Extract Changes from Chart.yaml
-        if: steps.detect-changed.outputs.changed_charts != ''
-        run: |
-          for chart in ${{ steps.detect-changed.outputs.changed_charts }}; do
-            echo "# Changelog" > $chart/RELEASE-NOTES.md
-            echo "" >> $chart/RELEASE-NOTES.md
-            changes=$(yq eval '.annotations["artifacthub.io/changes"] | select(. != null)' $chart/Chart.yaml)
-            if [ -n "$changes" ]; then
-              echo "$changes" | yq eval -o=json | jq -r '.[] | "- **\(.kind | .[0:1] | ascii_upcase)\(.kind | .[1:])**: \(.description)\n  \(.links // [] | map("  - [\(.name)](\(.url))") | join("\n"))"' >> $chart/RELEASE-NOTES.md
-            else
-              echo "No changes recorded for this release." >> $chart/RELEASE-NOTES.md
-            fi
-          done
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.7.0
+        if: steps.detect-changed.outputs.chart_changed == 'true' && steps.signing-secrets.outputs.configured == 'true'
         with:
           config: ./.github/configs/cr.yaml
         env:
@@ -214,3 +226,11 @@ jobs:
           CR_PASSPHRASE_FILE: ${{ steps.import-gpg.outputs.passphrase-file }}
           CR_SIGN: "true"
           CR_SKIP_EXISTING: "true"
+
+      - name: Skip release when no chart changes were detected
+        if: steps.detect-changed.outputs.chart_changed != 'true'
+        run: echo "No charts/outline changes detected; skipping chart release."
+
+      - name: Skip release when signing secrets are not configured
+        if: steps.detect-changed.outputs.chart_changed == 'true' && steps.signing-secrets.outputs.configured != 'true'
+        run: echo "Signing secrets are not configured yet; skipping signed chart release."
