@@ -14,12 +14,12 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 0.8.0
+version: 0.9.0
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "1.7.1"
+appVersion: "1.8.1"
 kubeVersion: ">=1.23.0-0"
 home: https://www.getoutline.com/
 maintainers:
@@ -59,9 +59,14 @@ annotations:
       links:
         - name: Upstream Project
           url: https://hub.docker.com/r/outlinewiki/outline
+    - kind: changed
+      description: Update outlinewiki/outline image version to 1.8.1
+      links:
+        - name: Upstream Project
+          url: https://hub.docker.com/r/outlinewiki/outline
   artifacthub.io/images: |
     - name: outline
-      image: outlinewiki/outline:1.7.1
+      image: outlinewiki/outline:1.8.1
       platforms:
         - linux/amd64
         - linux/arm64
