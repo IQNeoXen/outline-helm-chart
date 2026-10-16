@@ -1,3 +1,6 @@
+{{- if .Values.minio.enabled }}
+{{- fail "MinIO support has been removed because MinIO images are no longer available on public registries. Configure an external S3-compatible storage service using fileStorage.s3; see the chart storage documentation." }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -204,33 +207,16 @@ spec:
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
-                {{- if and .Values.minio.enabled (eq (len .Values.minio.users) 0) }}
-                  name: {{ template "outline.fullname" . }}-minio
-                  key: rootUser
-                {{- else }}
                   name: {{ default (printf "%s-s3-secret" (include "outline.fullname" .)) .Values.fileStorage.s3.existingSecret }}
                   key: {{ .Values.fileStorage.s3.accessKeyIdSecretKey }}
-                {{- end }}
             - name: AWS_SECRET_ACCESS_KEY
               valueFrom:
                 secretKeyRef:
-                {{- if and .Values.minio.enabled (eq (len .Values.minio.users) 0) }}
-                  name: {{ template "outline.fullname" . }}-minio
-                  key: rootPassword
-                {{- else }}
                   name: {{ default (printf "%s-s3-secret" (include "outline.fullname" .)) .Values.fileStorage.s3.existingSecret }}
                   key: {{ .Values.fileStorage.s3.secretAccessKeySecretKey }}
-                {{- end }}
 
-          {{- if and .Values.minio.enabled (gt (len .Values.minio.buckets) 0) }}
-          {{- with (first .Values.minio.buckets) }}
-            - name: AWS_S3_UPLOAD_BUCKET_NAME
-              value: {{ .name | quote }}
-          {{- end}}
-          {{- else }}
             - name: AWS_S3_UPLOAD_BUCKET_NAME
               value: {{ .Values.fileStorage.s3.bucket | quote }}
-          {{- end }}
 
             - name: AWS_REGION
               value: {{ .Values.fileStorage.s3.region | quote }}
@@ -239,12 +225,7 @@ spec:
               value: {{ .Values.fileStorage.s3.accelerateUrl | quote }}
           {{- end }}
 
-          {{- if .Values.minio.enabled }}
-            {{- with (first .Values.minio.ingress.hosts) }}
-            - name: AWS_S3_UPLOAD_BUCKET_URL
-              value: {{ printf "http://%s" . }}
-            {{- end }}
-          {{- else if .Values.fileStorage.s3.bucketUrl }}
+          {{- if .Values.fileStorage.s3.bucketUrl }}
             - name: AWS_S3_UPLOAD_BUCKET_URL
               value: {{ .Values.fileStorage.s3.bucketUrl | quote }}
           {{- end }}

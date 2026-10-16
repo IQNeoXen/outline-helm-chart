@@ -7,7 +7,6 @@ chart-dirs:
   - charts
 chart-repos:
   - bitnami=https://charts.bitnami.com/bitnami
-  - minio=https://charts.min.io
 helm-extra-args: "--timeout 600s"
 validate-chart-schema: true
 validate-chart-values: true

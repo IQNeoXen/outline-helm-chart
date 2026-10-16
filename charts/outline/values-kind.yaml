@@ -17,6 +17,3 @@ postgresql:
   primary:
     persistence:
       enabled: false
-
-minio:
-  enabled: true

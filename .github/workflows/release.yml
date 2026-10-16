@@ -70,7 +70,6 @@ jobs:
       - name: Add dependency chart repos
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm repo add minio https://charts.min.io
 
       - name: Detect changed Outline chart or CI config
         id: list-changed
@@ -169,7 +168,6 @@ jobs:
       - name: Add dependency chart repos
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
-          helm repo add minio https://charts.min.io
 
       - name: Detect Outline chart changes
         id: detect-changed

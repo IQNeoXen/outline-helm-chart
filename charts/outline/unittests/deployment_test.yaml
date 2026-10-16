@@ -839,10 +839,8 @@ tests:
               claimName: fake-existing-claim
         template: deployment.yaml
 
-  - it: should set aws access key id from s3 object when fileStorage.mode is s3 and minio is not enabled
+  - it: should set aws access key id from s3 object when fileStorage.mode is s3
     set:
-      minio:
-        enabled: false
       fileStorage:
         mode: s3
         s3:
@@ -858,32 +856,12 @@ tests:
                 name: outline-s3-secret
         template: deployment.yaml
 
-  - it: should set aws access key from rootUser key when file storage mode is s3 and minio is enabled and users are not set
-    set:
-      fileStorage:
-        mode: s3
-      minio:
-        enabled: true
-        users: []
-    asserts:
-      - contains:
-          path: spec.template.spec.containers[?(@.name == "outline")].env
-          content:
-            name: AWS_ACCESS_KEY_ID
-            valueFrom:
-              secretKeyRef:
-                key: rootUser
-                name: outline-minio
-        template: deployment.yaml
-
-  - it: should set aws access key from existing secret when file storage mode is s3 and minio is not enabled
+  - it: should set aws access key from existing secret when file storage mode is s3
     set:
       fileStorage:
         mode: s3
         s3:
           existingSecret: fake-existing-secret
-      minio:
-        enabled: false
     asserts:
       - contains:
           path: spec.template.spec.containers[?(@.name == "outline")].env
@@ -895,10 +873,8 @@ tests:
                 name: fake-existing-secret
         template: deployment.yaml
 
-  - it: should set aws secret access key from s3 object when fileStorage.mode is s3 and minio is not enabled
+  - it: should set aws secret access key from s3 object when fileStorage.mode is s3
     set:
-      minio:
-        enabled: false
       fileStorage:
         mode: s3
         s3:
@@ -914,32 +890,12 @@ tests:
                 name: outline-s3-secret
         template: deployment.yaml
 
-  - it: should set aws secret access key from rootPassword key when file storage mode is s3 and minio is enabled and users are not set
-    set:
-      fileStorage:
-        mode: s3
-      minio:
-        enabled: true
-        users: []
-    asserts:
-      - contains:
-          path: spec.template.spec.containers[?(@.name == "outline")].env
-          content:
-            name: AWS_SECRET_ACCESS_KEY
-            valueFrom:
-              secretKeyRef:
-                key: rootPassword
-                name: outline-minio
-        template: deployment.yaml
-
-  - it: should set aws secret access key from existing secret when file storage mode is s3 and minio is not enabled
+  - it: should set aws secret access key from existing secret when file storage mode is s3
     set:
       fileStorage:
         mode: s3
         s3:
           existingSecret: fake-existing-secret
-      minio:
-        enabled: false
     asserts:
       - contains:
           path: spec.template.spec.containers[?(@.name == "outline")].env
@@ -951,48 +907,12 @@ tests:
                 name: fake-existing-secret
         template: deployment.yaml
 
-  - it: should set bucket name from s3 object when file storage mode is s3 and minio is not enabled
+  - it: should set bucket name from s3 object when file storage mode is s3
     set:
       fileStorage:
         mode: s3
         s3:
           bucket: fake-bucket
-    asserts:
-      - contains:
-          path: spec.template.spec.containers[?(@.name == "outline")].env
-          content:
-            name: AWS_S3_UPLOAD_BUCKET_NAME
-            value: fake-bucket
-        template: deployment.yaml
-
-  - it: should set bucket name from minio bucket when file storage mode is s3 and minio is enabled
-    set:
-      fileStorage:
-        mode: s3
-      minio:
-        enabled: true
-        buckets:
-          - name: fake-bucket
-            policy: none
-            purge: false
-            versioning: false
-    asserts:
-      - contains:
-          path: spec.template.spec.containers[?(@.name == "outline")].env
-          content:
-            name: AWS_S3_UPLOAD_BUCKET_NAME
-            value: fake-bucket
-        template: deployment.yaml
-
-  - it: should set bucket name from s3 object when file storage mode is s3 and minio is enabled but buckets are not set
-    set:
-      fileStorage:
-        mode: s3
-        s3:
-          bucket: fake-bucket
-      minio:
-        enabled: true
-        buckets: []
     asserts:
       - contains:
           path: spec.template.spec.containers[?(@.name == "outline")].env
@@ -1015,37 +935,32 @@ tests:
             value: eu-central-1
         template: deployment.yaml
 
-  - it: should set s3 bucket upload url from minio ingress when file storage mode is s3 and minio is enabled
-    set:
-      fileStorage:
-        mode: s3
-      minio:
-        enabled: true
-        ingress:
-          hosts:
-            - fake-minio-ingress.minio.local
-    asserts:
-      - contains:
-          path: spec.template.spec.containers[?(@.name == "outline")].env
-          content:
-            name: AWS_S3_UPLOAD_BUCKET_URL
-            value: http://fake-minio-ingress.minio.local
-        template: deployment.yaml
-
-  - it: should set s3 bucket upload url from s3 object bucket url when file storage mode is s3 and minio is not enabled
+  - it: should set s3 bucket upload url from s3 object bucket url when file storage mode is s3
     set:
       fileStorage:
         mode: s3
         s3:
           bucketUrl: https://fake-bucket-url
-      minio:
-        enabled: false
     asserts:
       - contains:
           path: spec.template.spec.containers[?(@.name == "outline")].env
           content:
             name: AWS_S3_UPLOAD_BUCKET_URL
             value: https://fake-bucket-url
+        template: deployment.yaml
+
+  - it: should set s3 accelerate url from s3 object when file storage mode is s3
+    set:
+      fileStorage:
+        mode: s3
+        s3:
+          accelerateUrl: https://s3-accelerate.example.test
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[?(@.name == "outline")].env
+          content:
+            name: AWS_S3_ACCELERATE_URL
+            value: https://s3-accelerate.example.test
         template: deployment.yaml
 
   - it: should set s3 force path style from s3 object when file storage mode is s3

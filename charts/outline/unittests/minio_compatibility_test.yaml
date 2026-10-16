@@ -1,0 +1,38 @@
+suite: test removed MinIO compatibility guard
+
+set:
+  externalPostgresql:
+    host: fake-postgresql-service
+    password: P455w0rd!
+  externalRedis:
+    host: fake-redis-service
+    password: P455w0rd!
+
+release:
+  name: outline
+  namespace: outline
+
+chart:
+  version: 1.0.0
+  appVersion: 1.0.0
+
+tests:
+  - it: should reject enabled bundled MinIO with migration guidance
+    set:
+      minio:
+        enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: "MinIO support has been removed because MinIO images are no longer available on public registries. Configure an external S3-compatible storage service using fileStorage.s3; see the chart storage documentation."
+
+  - it: should tolerate legacy MinIO settings when disabled
+    set:
+      minio:
+        enabled: false
+        rootUser: legacy
+        persistence:
+          enabled: true
+    asserts:
+      - isKind:
+          of: Deployment
+        template: deployment.yaml

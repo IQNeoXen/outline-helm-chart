@@ -321,6 +321,16 @@ auth:
 
 ## Storage Configuration
 
+### Breaking change in chart version 1.0.0: bundled MinIO removed
+
+Bundled MinIO support has been removed because MinIO images are no longer available on public registries. Before upgrading from a release that used bundled MinIO:
+
+1. Migrate your data out of the bundled MinIO instance to an external S3-compatible storage service.
+2. Remove `minio.enabled` from your values or set it to `false`. Setting it to `true` now causes Helm rendering to fail.
+3. Configure the external service under `fileStorage.s3`, including its credentials, bucket, region, and endpoint as needed.
+
+Do not upgrade until the data migration is complete and the external storage configuration is ready.
+
 ### Local File Storage
 
 ```yaml
@@ -347,22 +357,6 @@ fileStorage:
     secretAccessKey: "your-secret-key"
     forcePathStyle: true
     acl: private
-```
-
-### Using MinIO
-
-```yaml
-fileStorage:
-  mode: s3
-
-minio:
-  enabled: true
-  rootUser: admin
-  rootPassword: strongpassword
-
-  persistence:
-    enabled: true
-    size: 40Gi
 ```
 
 ## Database Configuration
@@ -503,6 +497,12 @@ This section outlines major updates and breaking changes for each version of the
 ---
 
 ###  Version-Specific Upgrade Notes
+
+#### Upgrading to Version 1.0.0
+
+##### Breaking change: bundled MinIO removed
+
+Bundled MinIO support has been removed because its images are no longer available on public registries. Before upgrading, migrate your data from bundled MinIO to an external S3-compatible storage service, remove or disable `minio.enabled`, and configure the service with `fileStorage.s3`.
 
 #### Upgrading to Version 0.5.2
 

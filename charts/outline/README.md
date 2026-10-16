@@ -4,7 +4,7 @@
 
 A Helm chart for the fastest knowledge base for growing teams. Beautiful, realtime collaborative, feature packed, and markdown compatible.
 
-![Version: 0.13.1](https://img.shields.io/badge/Version-0.13.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.11.0](https://img.shields.io/badge/AppVersion-1.11.0-informational?style=flat-square)
+![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.11.0](https://img.shields.io/badge/AppVersion-1.11.0-informational?style=flat-square)
 
 > This chart is an independently maintained fork of the Outline chart originally
 > published by community-charts/helm-charts. It is not affiliated with,
@@ -321,6 +321,16 @@ auth:
 
 ## Storage Configuration
 
+### Breaking change in chart version 1.0.0: bundled MinIO removed
+
+Bundled MinIO support has been removed because MinIO images are no longer available on public registries. Before upgrading from a release that used bundled MinIO:
+
+1. Migrate your data out of the bundled MinIO instance to an external S3-compatible storage service.
+2. Remove `minio.enabled` from your values or set it to `false`. Setting it to `true` now causes Helm rendering to fail.
+3. Configure the external service under `fileStorage.s3`, including its credentials, bucket, region, and endpoint as needed.
+
+Do not upgrade until the data migration is complete and the external storage configuration is ready.
+
 ### Local File Storage
 
 ```yaml
@@ -347,22 +357,6 @@ fileStorage:
     secretAccessKey: "your-secret-key"
     forcePathStyle: true
     acl: private
-```
-
-### Using MinIO
-
-```yaml
-fileStorage:
-  mode: s3
-
-minio:
-  enabled: true
-  rootUser: admin
-  rootPassword: strongpassword
-
-  persistence:
-    enabled: true
-    size: 40Gi
 ```
 
 ## Database Configuration
@@ -504,6 +498,12 @@ This section outlines major updates and breaking changes for each version of the
 
 ###  Version-Specific Upgrade Notes
 
+#### Upgrading to Version 1.0.0
+
+##### Breaking change: bundled MinIO removed
+
+Bundled MinIO support has been removed because its images are no longer available on public registries. Before upgrading, migrate your data from bundled MinIO to an external S3-compatible storage service, remove or disable `minio.enabled`, and configure the service with `fileStorage.s3`.
+
 #### Upgrading to Version 0.5.2
 
 ##### Deprecation Notices
@@ -522,7 +522,6 @@ Kubernetes: `>=1.23.0-0`
 |------------|------|---------|
 | https://charts.bitnami.com/bitnami | postgresql | 18.1.9 |
 | https://charts.bitnami.com/bitnami | redis | 23.2.12 |
-| https://charts.min.io/ | minio | 5.4.0 |
 
 ## Uninstall Helm Chart
 
@@ -787,46 +786,7 @@ helm upgrade [RELEASE_NAME] outline/outline
 | logging | object | `{"extraDebug":[],"level":"info"}` | This is for setting up the logging. |
 | logging.extraDebug | list | `[]` | This is for setting up the extra debug. Available modules:    - lifecycle    - http    - editor    - router    - collaboration    - misc    - store    - plugins    - policies |
 | logging.level | string | `"info"` | This is for setting up the logging level. |
-| minio | object | `{"buckets":[{"name":"outline","policy":"none","purge":false,"versioning":false}],"consoleIngress":{"enabled":false,"hosts":["minio-console.mydomain.com"],"path":"/"},"deploymentUpdate":{"type":"Recreate"},"drivesPerNode":1,"enabled":false,"ingress":{"enabled":true,"hosts":["minio.mydomain.com"],"path":"/"},"mode":"standalone","persistence":{"accessMode":"ReadWriteOnce","annotations":{},"enabled":true,"existingClaim":"","size":"40Gi","storageClass":"","subPath":"","volumeName":""},"policies":[{"name":"outline-policy","statements":[{"actions":["s3:AbortMultipartUpload","s3:GetObject","s3:DeleteObject","s3:PutObject","s3:ListMultipartUploadParts"],"resources":["arn:aws:s3:::outline/*"]},{"actions":["s3:GetBucketLocation","s3:ListBucket","s3:ListBucketMultipartUploads"],"resources":["arn:aws:s3:::outline"]}]}],"pools":1,"replicas":1,"resources":{"requests":{"memory":"1Gi"}},"rootPassword":"","rootUser":"","statefulSetUpdate":{"updateStrategy":"Recreate"},"users":[{"accessKey":"outline","policy":"outline-policy","secretKey":"Change_Me"}]}` | Minio configuration |
-| minio.buckets | list | `[{"name":"outline","policy":"none","purge":false,"versioning":false}]` | Minio buckets |
-| minio.buckets[0] | object | `{"name":"outline","policy":"none","purge":false,"versioning":false}` | Outline bucket |
-| minio.buckets[0].policy | string | `"none"` | Policy to be set on the bucket [none|download|upload|public] |
-| minio.consoleIngress | object | `{"enabled":false,"hosts":["minio-console.mydomain.com"],"path":"/"}` | Minio console ingress |
-| minio.consoleIngress.enabled | bool | `false` | Enable ingress |
-| minio.consoleIngress.hosts | list | `["minio-console.mydomain.com"]` | Ingress hosts |
-| minio.consoleIngress.path | string | `"/"` | Ingress path |
-| minio.deploymentUpdate | object | `{"type":"Recreate"}` | Minio deployment update strategy |
-| minio.drivesPerNode | int | `1` | Number of drives attached to a node |
-| minio.enabled | bool | `false` | Enable minio |
-| minio.ingress | object | `{"enabled":true,"hosts":["minio.mydomain.com"],"path":"/"}` | Minio ingress. Outline will use this ingress to access Minio. It's required when fileStorage.mode is s3. |
-| minio.ingress.enabled | bool | `true` | Enable ingress |
-| minio.ingress.hosts | list | `["minio.mydomain.com"]` | Ingress hosts |
-| minio.ingress.path | string | `"/"` | Ingress path |
-| minio.mode | string | `"standalone"` | Minio mode |
-| minio.persistence | object | `{"accessMode":"ReadWriteOnce","annotations":{},"enabled":true,"existingClaim":"","size":"40Gi","storageClass":"","subPath":"","volumeName":""}` | Minio persistence |
-| minio.persistence.accessMode | string | `"ReadWriteOnce"` | Minio persistence access mode |
-| minio.persistence.annotations | object | `{}` | Minio persistence annotations |
-| minio.persistence.enabled | bool | `true` | Enable persistence |
-| minio.persistence.existingClaim | string | `""` | Minio persistence existing claim |
-| minio.persistence.size | string | `"40Gi"` | Minio persistence size |
-| minio.persistence.storageClass | string | `""` | Minio persistence storage class |
-| minio.persistence.subPath | string | `""` | Minio persistence sub path |
-| minio.persistence.volumeName | string | `""` | Minio persistence volume name |
-| minio.policies | list | `[{"name":"outline-policy","statements":[{"actions":["s3:AbortMultipartUpload","s3:GetObject","s3:DeleteObject","s3:PutObject","s3:ListMultipartUploadParts"],"resources":["arn:aws:s3:::outline/*"]},{"actions":["s3:GetBucketLocation","s3:ListBucket","s3:ListBucketMultipartUploads"],"resources":["arn:aws:s3:::outline"]}]}]` | Minio policies |
-| minio.policies[0] | object | `{"name":"outline-policy","statements":[{"actions":["s3:AbortMultipartUpload","s3:GetObject","s3:DeleteObject","s3:PutObject","s3:ListMultipartUploadParts"],"resources":["arn:aws:s3:::outline/*"]},{"actions":["s3:GetBucketLocation","s3:ListBucket","s3:ListBucketMultipartUploads"],"resources":["arn:aws:s3:::outline"]}]}` | Outline policy |
-| minio.policies[0].statements[0] | object | `{"actions":["s3:AbortMultipartUpload","s3:GetObject","s3:DeleteObject","s3:PutObject","s3:ListMultipartUploadParts"],"resources":["arn:aws:s3:::outline/*"]}` | Outline policy statements |
-| minio.pools | int | `1` | Number of expanded MinIO clusters |
-| minio.replicas | int | `1` | Number of MinIO containers running |
-| minio.resources | object | `{"requests":{"memory":"1Gi"}}` | Minio resources |
-| minio.resources.requests | object | `{"memory":"1Gi"}` | Minio requests |
-| minio.resources.requests.memory | string | `"1Gi"` | Minio requests memory |
-| minio.rootPassword | string | `""` | Minio root password. Length should be at least 8 characters. |
-| minio.rootUser | string | `""` | Minio root user. Length should be at least 3 characters. |
-| minio.statefulSetUpdate | object | `{"updateStrategy":"Recreate"}` | Minio statefulset update strategy |
-| minio.users | list | `[{"accessKey":"outline","policy":"outline-policy","secretKey":"Change_Me"}]` | Minio users |
-| minio.users[0] | object | `{"accessKey":"outline","policy":"outline-policy","secretKey":"Change_Me"}` | Outline user |
-| minio.users[0].policy | string | `"outline-policy"` | Outline user policy |
-| minio.users[0].secretKey | string | `"Change_Me"` | Outline user secret key |
+| minio.enabled | bool | `false` | Deprecated compatibility flag. Enabling bundled MinIO is unsupported because its images are no longer available on public registries; configure external S3-compatible storage instead. |
 | nameOverride | string | `""` | This is to override the chart name. |
 | nodeSelector | object | `{}` | For more information checkout: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/#nodeselector |
 | podAnnotations | object | `{}` | This is for setting Kubernetes Annotations to a Pod. For more information checkout: https://kubernetes.io/docs/concepts/overview/working-with-objects/annotations/ |
