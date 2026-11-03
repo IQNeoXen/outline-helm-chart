@@ -14,12 +14,12 @@ type: application
 # This is the chart version. This version number should be incremented each time you make changes
 # to the chart and its templates, including the app version.
 # Versions are expected to follow Semantic Versioning (https://semver.org/)
-version: 1.0.0
+version: 1.0.1
 # This is the version number of the application being deployed. This version number should be
 # incremented each time you make changes to the application. Versions are not expected to
 # follow Semantic Versioning. They should reflect the version the application is using.
 # It is recommended to use it with quotes.
-appVersion: "1.11.0"
+appVersion: "1.12.0"
 kubeVersion: ">=1.23.0-0"
 home: https://www.getoutline.com/
 maintainers:
@@ -47,7 +47,7 @@ annotations:
       url: https://docs.getoutline.com/
     - name: Official Outline Hosting Documentation
       url: https://docs.getoutline.com/s/hosting/
-  artifacthub.io/containsSecurityUpdates: "false"
+  artifacthub.io/containsSecurityUpdates: "true"
   artifacthub.io/changes: |-
     - kind: changed
       description: Start independently maintained IQNeoXen fork of the Outline chart
@@ -89,11 +89,16 @@ annotations:
       links:
         - name: Upstream Project
           url: https://github.com/outline/outline/releases/tag/v1.11.0
+    - kind: changed
+      description: Update outlinewiki/outline image version to 1.12.0
+      links:
+        - name: Upstream Project
+          url: https://github.com/outline/outline/releases/tag/v1.12.0
     - kind: removed
       description: "BREAKING: Remove bundled MinIO because its images are no longer available on public registries. Before upgrading, migrate data from bundled MinIO, remove or disable minio.enabled, and configure external S3-compatible storage with fileStorage.s3."
   artifacthub.io/images: |
     - name: outline
-      image: outlinewiki/outline:1.11.0
+      image: outlinewiki/outline:1.12.0
       platforms:
         - linux/amd64
         - linux/arm64
