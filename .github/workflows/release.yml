@@ -235,7 +235,7 @@ jobs:
           echo "keyring=${GNUPG_DIR}/secring.gpg" >> "${GITHUB_OUTPUT}"
 
       - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.8.0
+        uses: helm/chart-releaser-action@v1.9.0
         if: steps.detect-changed.outputs.chart_changed == 'true' && steps.signing-secrets.outputs.configured == 'true'
         with:
           config: ./.github/configs/cr.yaml
